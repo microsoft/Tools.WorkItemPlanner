@@ -10,9 +10,9 @@ Work Item Planner is a web application that allows users to generate Work Items 
 
 The application is hosted using Azure App Service (Web App).
 
-- Azure App Service Web App: [WorkItemPlanner](https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/87462284-7600-4279-afa5-6ada5a13fdae/resourceGroups/rg-WorkItemPlanner/providers/Microsoft.Web/sites/WorkItemPlanner/appServices)
-- Subscription Name: 
-- Subscription ID: 
+- Azure App Service Web App: [WorkItemPlanner](https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/fd8ab19b-944d-40f1-b13b-e2036680bf7e/resourceGroups/rg-WorkItemPlanner/providers/Microsoft.Web/sites/WorkItemPlanner/appServices)
+- Subscription Name: AzDev-Agents&Tasks-Test
+- Subscription ID: fd8ab19b-944d-40f1-b13b-e2036680bf7e
 - Tenant: Corp
 
 Application URL: https://workitemplanner.codeapp.ms/
@@ -30,9 +30,9 @@ Refer to [this](https://learn.microsoft.com/en-us/azure/app-service/quickstart-n
 
 #### Automated Deployment
 
-A pipeline [Tools.WorkItemPlanner-deploy](https://dev.azure.com/mseng/AzureDevOps/_build?definitionId=19224&_a=summary) has been created to build and deploy. Once a PR is merged to the 'main' branch the code is automatically deployed.
+A GitHub Action [Tools.WorkItemPlanner-deploy](https://github.com/microsoft/Tools.WorkItemPlanner/actions/workflows/azure-webapps-node.yml) has been created to build and deploy. Once a PR is merged to the 'main' branch the code is automatically deployed.
 
-[![Build Status](https://dev.azure.com/mseng/AzureDevOps/_apis/build/status%2FTools.FeaturePlanner%2FTools.FeaturePlanner-deploy?branchName=master)](https://dev.azure.com/mseng/AzureDevOps/_build/latest?definitionId=19224&branchName=master)
+[![Tools.WorkItemPlanner-deploy](https://github.com/microsoft/Tools.WorkItemPlanner/actions/workflows/azure-webapps-node.yml/badge.svg?branch=main)](https://github.com/microsoft/Tools.WorkItemPlanner/actions/workflows/azure-webapps-node.yml)
 
 ### Running Locally
 
@@ -75,7 +75,8 @@ Teams have the choice to onboard their own template i.e., customized choice of W
         "tasks": [
           {
             "title": "string",
-            "estimate": "number"
+            "estimate": "number",
+            "description": "string" // optional
           }
         ]
       }
@@ -144,4 +145,4 @@ Contributions are welcome! If you find any bugs or have suggestions for improvem
 
 ## SDL Assessment
 
-[August_2023 - Scenario Planner](https://microsoft.visualstudio.com/OS/_compliance/product/5dafcc76-b9d2-95a7-70e9-6d13bf17075d/assessments/31880c02-6108-fcb1-5c5e-5cefc0d355de)
+[Work Item Planner - SDL Assessment (August 2025)](https://microsoft.visualstudio.com/Family/_compliance/product/4446c4d1-ce1b-1466-31a3-7d75a1baa0b5/assessments/31bcff24-d74b-9373-1701-5c586b35d8a7)
