@@ -1,0 +1,236 @@
+{
+  "version": "1.0.0",
+  "template": {
+    "workitems": [
+      {
+        "title": "Engineering Design & Review",
+        "tasks": [
+          {
+            "title": "[Engg. Design] Product Spec Analysis",
+            "estimate": 3
+          },
+          {
+            "title": "[Engg. Design] Design & Document",
+            "estimate": 5
+          },
+          {
+            "title": "[Engg. Design][Review] Engineering Forum Review",
+            "estimate": 2
+          },
+          {
+            "title": "[Engg. Design][Review] Architecture Review Board (ARB) Review",
+            "estimate": 2
+          }
+        ]
+      },
+      {
+        "title": "Feasibility Review",
+        "tasks": [
+          {
+            "title": "[Doc] Document Feasibility Review",
+            "estimate": 1
+          },
+          {
+            "title": "[Review][Approval] Feasibility Review & Approval",
+            "estimate": 0.5
+          }
+        ]
+      },
+      {
+        "title": "Velocity Key",
+        "tasks": [
+          {
+            "title": "[Dev] Identify & Create Velocity Key(s)",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Dev] Provision Velocity Key(s) on Control Tower (automated)",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "Feature Implementation",
+        "tasks": [
+          {
+            "title": "[Dev] Implementation",
+            "estimate": 3
+          },
+          {
+            "title": "[Dev][Tracking] Pull Request Review & Approval",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "Telemetry Implementation",
+        "tasks": [
+          {
+            "title": "[Dev] Implement Telemetry",
+            "estimate": 2
+          },
+          {
+            "title": "[Dev][Test] Validate Telemetry",
+            "estimate": 1
+          }
+        ]
+      },
+      {
+        "title": "Test Cases",
+        "tasks": [
+          {
+            "title": "[Dev] Implement Unit-Tests",
+            "estimate": 2
+          },
+          {
+            "title": "[Dev] Implement Automated Tests",
+            "estimate": 2
+          },
+          {
+            "title": "[Dev] Create Manual Tests",
+            "estimate": 1
+          },
+          {
+            "title": "[Dev] Validate Manual Tests created by vendor team(s)",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Dev] Onboard Tests to VTS",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Dev] Capture Test Evidence for Manual Tests - L4 Branch",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Dev] Capture Test Evidence for Manual Tests - L3 Branch",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Dev] Capture Test Evidence for Manual Tests - L2 Branch",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Process] Update Manual Tests Automation Status & (if not automated, reason in Custom String 05)",
+            "estimate": 0.5
+          }
+        ]
+      },
+      {
+        "title": "Test In Prod (TIP) Measures",
+        "tasks": [
+          {
+            "title": "[Dev] Implement TIP Measure #1",
+            "estimate": 1
+          },
+          {
+            "title": "[Dev] Implement TIP Measure #2",
+            "estimate": 1
+          },
+          {
+            "title": "[Dev] Promote TIP measures to RQV",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Dev] Validate TIP Measures using TraceView++ tool",
+            "estimate": 1
+          },
+          {
+            "title": "[Dev] Add TIP Ids to the client.pipelines repo",
+            "estimate": 0.5
+          }
+        ]
+      },
+      {
+        "title": "Compliance Assessments & Reviews",
+        "tasks": [
+          {
+            "title": "[Compliance] Complete Compliance Assessment Questionnaire",
+            "estimate": 1
+          },
+          {
+            "title": "[Compliance][Review] Generate Accessibility Insights Report (if applicable)",
+            "estimate": 0
+          },
+          {
+            "title": "[Compliance][Review] Accessibility Review (if applicable)",
+            "estimate": 0
+          },
+          {
+            "title": "[Compliance][Review] Security Review (if applicable)",
+            "estimate": 0
+          },
+          {
+            "title": "[Compliance][Review] OS Component Security",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Compliance][Review] Global Readiness Review",
+            "estimate": 0.5
+          }
+        ]
+      },
+      {
+        "title": "Self hosting, Controlled Rollout & Payload Tracking",
+        "tasks": [
+          {
+            "title": "[Test] Self-host and validate on local machine",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Test] Host bug bash and gather feedback",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Dev] Change Velocity key to 'EnabledByDefault'",
+            "estimate": 0.25
+          },
+          {
+            "title": "[Dev] Cherry-pick (as applicable)",
+            "estimate": 2
+          },
+          {
+            "title": "[Dev] Tag Scenario once code ported to release branch (ex: branch: ni_rel2402 tag: DASH_NI_REL2402_PORTED)",
+            "estimate": 0
+          },
+          {
+            "title": "[Dev][Mission Control] Rollout Velocity Key(s) - Dev Audience - Dev Branches",
+            "estimate": 0
+          },
+          {
+            "title": "[Dev][Mission Control] Rollout Velocity Key(s) - Dev Audience - Moment Branches",
+            "estimate": 0
+          },
+          {
+            "title": "[Dev][Mission Control] Rollout Velocity Key(s) - Dev Audience - Dev Interal (ni_prerelease)",
+            "estimate": 0
+          },
+          {
+            "title": "[Dev][Mission Control] Rollout Velocity Key(s) - Dev Audience - Dev External (ni_prerelease)",
+            "estimate": 0
+          },
+          {
+            "title": "[Dev][Mission Control] Rollout Velocity Key(s) - Canary Audience - Gates Audience (rs_prerelease_cfr)",
+            "estimate": 0
+          },
+          {
+            "title": "[Dev][Mission Control] Rollout Velocity Key(s) - Canary Audience - Canary Internal (rs_prerelease_cfr)",
+            "estimate": 0
+          },
+          {
+            "title": "[Dev][Mission Control] Rollout Velocity Key(s) - Canary Audience - Canary External (rs_prerelease)",
+            "estimate": 0
+          },
+          {
+            "title": "[Dev][Mission Control] Rollout Velocity Key(s) - Beta Audience - Beta Internal (ni_release)",
+            "estimate": 0
+          },
+          {
+            "title": "[Dev][Mission Control] Rollout Velocity Key(s) - Beta Audience - Beta External (ni_release)",
+            "estimate": 0
+          }
+        ]
+      }
+    ]
+  }
+}

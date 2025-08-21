@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Work Item Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="stylesheets/vendor/bootstrap_5.3.0_css.min.css">
+  <link rel="stylesheet" href="stylesheets/vendor/jquery_ui_1.13.0_themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="stylesheets/main.css">
+  <link rel="icon" href="images/azure_devops_favicon.png" type="image/x-icon">
+</head>
+
+<body>
+  <script src="scripts/vendor/bootstrap_5.3.0.bundle.min.js"></script>
+  <script src="scripts/vendor/jquery_3.6.0.min.js"></script>
+  <script src="scripts/vendor/jquery-1.13.0-ui.min.js"></script>
+
+  <header>
+    <a href="https://dev.azure.com" target="_blank" rel="noopener noreferrer">
+      <img src="images/azure_devops_logo.png" alt="Azure DevOps Logo" class="azure-logo">
+    </a>
+
+    <div class="header-content">
+      <div class="header-titles">
+        <h1 style="margin: 5px 0; color: white;">Work Item Planner</h1>
+      </div>
+    </div>
+    <div class="user-info" id="user-info">
+      <div class="dropdown">
+        <div id="profile-dropdown" class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+          aria-haspopup="true" aria-expanded="false" style="color: white;">
+          <img src="images/profile_picture_placeholder.jpg" class="user-profile-image" id="user-profile-image"
+            style="display: inline;">
+        </div>
+        <div class="dropdown-menu floating-menu" aria-labelledby="user-name">
+          <a class="dropdown-item profile-link" href="https://myaccount.microsoft.com/?ref=MeControl" target="_blank"><i
+              class="fas fa-user-circle"></i> Profile</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item feedback-link" href="https://forms.office.com/r/6QYanppNWa" target="_blank"><i
+              class="fas fa-comment"></i> Submit Feedback</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item logout-link" href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <form id="feature-form">
+
+      <h3 style="display: flex; align-items: center;">
+        <img src="images/organization.webp" alt="Work Item Icon" class="icon">
+        <span>Organization, Project & Team</span>
+      </h3>
+      <hr>
+      <small class="form-text text-muted">Choices are curated based on your access</small>
+      <div class="form-group mb-3 d-flex">
+        <select class="form-control" id="organization-select">
+          <option value="" disabled selected>Select an Organization</option>
+        </select>
+        <select class="form-control ms-2" id="project-select" disabled>
+          <option value="" disabled selected>Select a Project</option>
+        </select>
+        <select class="form-control ms-2" id="team-select" disabled>
+          <option value="" disabled selected>Select a Team</option>
+        </select>
+      </div>
+      <div style="margin-bottom: 50px;"></div>
+
+      <h3 style="display: flex; align-items: center;">
+        <img src="images/trophy.webp" alt="Parent Work Item Icon" class="icon">
+        <span>Parent Work Item</span>
+      </h3>
+      <hr>
+      <div class="form-group">
+        <div style="display: flex; gap: 10px;">
+          <!-- Feature ID Input -->
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <small class="form-text text-muted">Existing Work Item under which the new Work Item(s) will be
+              created</small>
+            <input type="number" class="form-control" id="feature-id" placeholder="Parent Work Item Id" required>
+          </div>
+          <!-- Assignee Input -->
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <small class="form-text text-muted">Assignee for the new Work Item(s)</small>
+            <select class="form-control" id="assigned-to-select" required disabled>
+              <option value="" disabled selected>Select an Assignee</option>
+            </select>
+          </div>
+        </div>
+        <a id="feature-name" href="#" target="_blank"></a>
+        <br />
+        <div style="display: flex; gap: 10px;">
+          <!-- Area Path Input -->
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <small class="form-text text-muted">Area Path for the new Work Item(s)</small>
+            <input class="form-control" id="area-path" list="suggested-area-paths-list" placeholder="Area Path"
+              required>
+            <datalist id="suggested-area-paths-list"></datalist>
+          </div>
+          <!-- Iteration Input -->
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <small class="form-text text-muted">Iteration for the new Work Item(s)</small>
+            <input type="text" class="form-control" id="iteration" list="suggested-iterations-list"
+              placeholder="Iteration" required>
+            <datalist id="suggested-iterations-list"></datalist>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom: 50px;"></div>
+
+      <h3 style="display: flex; align-items: center;">
+        <img src="images/work-item.webp" alt="Work Item Icon" class="icon">
+        <span>New Work Item(s)</span>
+      </h3>
+      <hr>
+      <div class="form-group row align-items-center" style="margin-top: 20px;">
+        <div class="d-flex gap-3">
+          <div class="flex-grow-1">
+            <small class="form-text text-muted">Select Work Item Type</small>
+            <select class="form-control" id="work-item-type-select" disabled required>
+              <option value="" disabled selected>Select a Work Item Type</option>
+            </select>
+          </div>
+          <div class="flex-grow-1">
+            <small class="form-text text-muted">Title prefix for Work Item(s) (optional)</small>
+            <input type="text" class="form-control" id="deliverable-prefix" placeholder="Work Item Title Prefix">
+          </div>
+        </div>
+        <div id="work-item-hierarchy" style="margin-bottom: 10px; display: none;" class="mt-2">
+          <small class="form-text text-muted">Effective Hierarchy</small>
+          <div class="hierarchy-tree">
+            <span class="hierarchy-item">Parent Work Item</span>
+            <span class="hierarchy-connector">→</span>
+            <span class="hierarchy-item" id="selected-work-item-name">Selected Work Item Name</span>
+            <span class="hierarchy-connector">→</span>
+            <span class="hierarchy-item">Task</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom: 20px;"></div>
+
+      <h3 id="work-items-header">Work Items <span id="deliverable-count"></span></h3>
+      <div id="deliverables-container" style="margin-top: 20px;">
+        <div class="deliverable-item" data-index="1">
+          <div class="card p-3">
+            <div class="form-group">
+              <div class="input-group">
+                <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
+                <input type="text" class="form-control deliverable-prefix" placeholder="Work Item Title Prefix"
+                  style="flex: 1;" readonly disabled>
+                <input type="text" class="form-control deliverable-title" placeholder="Work Item Title" required
+                  style="flex: 2;">
+                <button type="button" class="btn description-toggle-btn" data-target="deliverable-description" title="Toggle Description">
+                  <i class="fas fa-caret-down description-caret"></i>
+                </button>
+                <div class="input-group-append">
+                  <button class="btn delete-deliverable-btn delete-btn" title="Delete Work Item">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="description-section" id="deliverable-description" style="display: none;">
+                <div class="rich-text-toolbar mt-2">
+                  <button type="button" class="toolbar-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+                  <button type="button" class="toolbar-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+                  <button type="button" class="toolbar-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                  <span class="toolbar-separator">|</span>
+                  <button type="button" class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                  <button type="button" class="toolbar-btn" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                  <span class="toolbar-separator">|</span>
+                  <button type="button" class="toolbar-btn image-btn" title="Insert Image"><i class="fas fa-image"></i></button>
+                  <span class="toolbar-separator">|</span>
+                  <button type="button" class="toolbar-btn expand-btn" title="Expand/Collapse Width"><i class="fas fa-expand-arrows-alt"></i></button>
+                  <span class="toolbar-separator">|</span>
+                  <button type="button" class="toolbar-btn" data-command="removeFormat" title="Clear Formatting"><i class="fas fa-remove-format"></i></button>
+                  <input type="file" class="image-input" accept="image/*" style="display: none;">
+                </div>
+                <div class="form-control deliverable-description rich-text-editor" contenteditable="true" data-placeholder="Work Item Description (optional)" style="min-height: 80px; max-height: 200px; overflow-y: auto;"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <h3>Tasks <span id="task-count-1"></span></h3>
+              <ul class="task-list">
+                <li class="task-item">
+                  <div class="input-group d-flex align-items-center" style="flex-wrap: nowrap; width: 100%; gap: 5px;">
+                    <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
+                    <input type="text" class="form-control task-title" placeholder="Task Title"
+                      style="flex: 1 1 calc(85% - 5px);">
+                    <input type="number" class="form-control task-estimate" placeholder="Estimate" min="0" max="100"
+                      step="0.25" title="Please enter numbers only" style="flex: 1 1 calc(15% - 5px);">
+                    <button type="button" class="btn description-toggle-btn" data-target="task-description" title="Toggle Description">
+                      <i class="fas fa-caret-down description-caret"></i>
+                    </button>
+                    <div class="input-group-append delete-task-container">
+                      <button class="btn delete-task-btn" title="Delete Task"><i class="fas fa-times"></i></button>
+                    </div>
+                  </div>
+                  <div class="description-section" id="task-description" style="display: none;">
+                    <div class="rich-text-toolbar mt-2">
+                      <button type="button" class="toolbar-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+                      <button type="button" class="toolbar-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+                      <button type="button" class="toolbar-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                      <span class="toolbar-separator">|</span>
+                      <button type="button" class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                      <button type="button" class="toolbar-btn" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                      <span class="toolbar-separator">|</span>
+                      <button type="button" class="toolbar-btn image-btn" title="Insert Image"><i class="fas fa-image"></i></button>
+                      <span class="toolbar-separator">|</span>
+                      <button type="button" class="toolbar-btn expand-btn" title="Expand/Collapse Width"><i class="fas fa-expand-arrows-alt"></i></button>
+                      <span class="toolbar-separator">|</span>
+                      <button type="button" class="toolbar-btn" data-command="removeFormat" title="Clear Formatting"><i class="fas fa-remove-format"></i></button>
+                      <input type="file" class="image-input" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="form-control task-description rich-text-editor" contenteditable="true" data-placeholder="Task Description (optional)" style="min-height: 60px; max-height: 150px; overflow-y: auto;"></div>
+                  </div>
+                </li>
+              </ul>
+              <div class="add-btn-container d-flex justify-content-between align-items-center mt-2">
+                <h3 class="mb-0">
+                  <div class="deliverable-estimate" id="deliverable-estimate"></div>
+                </h3>
+                <button class="btn btn-primary add-task-btn"><i class="fas fa-plus"></i> Task</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-buttons mt-4">
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="preconfigured-dropdown"
+            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-magic"></i> Prefill Work Item(s)
+          </button>
+          <div class="dropdown-menu preconfigured-templates-dropdown" aria-labelledby="preconfigured-dropdown">
+            <!-- Choices will be populated dynamically -->
+          </div>
+          <button id="add-deliverable" class="btn btn-primary"><i class="fas fa-plus"></i> Work Item</button>
+        </div>
+        <div style="margin-bottom: 10px;"></div>
+        <div class="text-left">
+          <a id="add-template-link"
+            href="https://mseng@dev.azure.com/mseng/AzureDevOps/_git/Tools.FeaturePlanner?path=/README.md&_a=preview&anchor=onboarding-a-work-item-template"
+            target="_blank" class="add-template-link">Add Work Item(s) Template</a>
+        </div>
+        <div style="margin-bottom: 50px;"></div>
+        <hr>
+        <h3 style="color: darkolivegreen;">Total Estimate (Dev Days): <span id="estimates-sum"></span></h3>
+        <hr>
+        <div class="text-left">
+          <a id="reset-form-link" href="#" class="reset-link">Clear Form</a>
+        </div>
+        <div class="text-center">
+          <button type="submit" class="btn btn-primary"><i class="fas fa-cloud-upload-alt"></i> Save Work Item(s) to
+            Azure DevOps</button>
+        </div>
+      </div>
+    </form>
+    <div style="margin-bottom: 20px;"></div>
+
+    <div class="progress-container">
+      <div class="progress">
+        <div class="progress-bar progress-bar-animated" role="progressbar" id="progress-bar" aria-valuenow="0"
+          aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="pat-popup-modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">Enter your Azure DevOps 'Personal Access Token (PAT)'</h2>
+        </div>
+        <div class="modal-body" style="text-align: left;">
+          <p style="color: darkred; display: none;" id="pat-popup-invalid-p">Error: Last entered PAT is invalid.</p>
+          <p><a href="https://microsoft.visualstudio.com/_usersSettings/tokens" target="_blank">Click here</a> to create
+            one with the following scopes:</p>
+          <ol>
+            <li>Work Items - Read & Write</li>
+          </ol>
+          <small class="form-text text-muted">New Token -> Select Scope(s) -> Create</small>
+          <div style="margin-bottom: 10px;"></div>
+          <p>Your PAT allows the tool to generate Work Item(s) on your behalf.</p>
+          <div style="margin-bottom: 10px;"></div>
+          <!-- <input type="password" id="pat-input" class="form-control" placeholder="PAT" required> -->
+          <div style="text-align: center;">
+            <div style="margin-bottom: 10px;"></div>
+            <button id="pat-submit" class="btn btn-primary" disabled>Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="load-preconfigured-items-confirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-question-circle"></i> Prefil Work Item(s)?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <h3>Are you sure you want to prefill the Work Item(s) using the selected template?</h3><br> <small
+            class="form-text text-muted highlight-text">Note: This will replace the Work Item(s) that have been
+            entered on this page. (Existing Work Item(s) linked to the parent Work Item will not be
+            affected)</small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Cancel</button>
+          <button type="button" class="btn btn-primary" id="load-preconfigured-items-confirmBtn">
+            <i class="fas fa-check"></i> OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-overlay">
+    <div class="loading-indicator">
+      <img src="images/loading_indicator.gif" alt="Loading" width="32" height="32">
+      <p class="loading-text"></p>
+    </div>
+  </div>
+
+  <div class="drafts-container" style="display: none;">
+    <h3 style="color: black;">Menu</h3>
+    <hr />
+    <ul id="drafts-list">
+    </ul>
+  </div>
+
+  <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.14.2/js/msal-browser.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk.js"></script>
+  <script type="text/javascript" src="work_item_templates/work_item_templates_index.js"></script>
+  <script type="text/javascript" src="scripts/authConfig.js"></script>
+  <script type="text/javascript" src="scripts/richTextEditor.js"></script>
+  <script type="text/javascript" src="scripts/storeRepo.js"></script>
+  <script type="text/javascript" src="scripts/vendor/azure-app-insights-2.8.18.min.js" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="scripts/monitoring.js"></script>
+  <script type="text/javascript" src="scripts/authRedirect.js"></script>
+  <script type="text/javascript" src="scripts/main.js"></script>
+  <script type="text/javascript" src="scripts/eventHandlers.js"></script>
+</body>
+
+</html>

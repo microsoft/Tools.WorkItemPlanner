@@ -1,0 +1,8 @@
+schemaVersion: 0.0.1
+isProduction: false
+accountableOwners:
+  service: b52a94e4-2a42-42b3-897a-44f0818b394b
+routing:
+  defaultAreaPath:
+    org: mseng
+    path: AzureDevOps\Pipelines\Pipeline Agent and Tasks - IDC

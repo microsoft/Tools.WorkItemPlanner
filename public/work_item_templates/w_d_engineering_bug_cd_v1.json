@@ -1,0 +1,80 @@
+{
+  "version": "1.0.0",
+  "template": {
+    "workitems": [
+      {
+        "title": "Feature Intake Approval",
+        "tasks": [
+          {
+            "title": "[Review] Fill Intake Form - aka.ms/cdintake",
+            "estimate": 0.25
+          },
+          {
+            "title": "[Review][Approval] Director Review & Approval",
+            "estimate": 0.25
+          },
+          {
+            "title": "[ADO] Link bug as child to CD Approved bug",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "Velocity Key",
+        "tasks": [
+          {
+            "title": "[Dev] Identify & Create Velocity Key(s)",
+            "estimate": 0.25
+          },
+          {
+            "title": "[Dev] Provision Velocity Key(s) on Control Tower (automated)",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "Bug Fix Implementation",
+        "tasks": [
+          {
+            "title": "[Dev] Bug Fix Implementation",
+            "estimate": 3
+          },
+          {
+            "title": "[Dev][Tracking] Pull Request Review & Approval",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "Telemetry & Test In Prod (TIP) Validation",
+        "tasks": [
+          {
+            "title": "[Dev][Test] Validate Telemetry",
+            "estimate": 1
+          },
+          {
+            "title": "[Dev] Validate TIP Measures using TraceView++ tool",
+            "estimate": 1
+          }
+        ]
+      },
+      {
+        "title": "Self hosting, Controlled Rollout & Payload Tracking",
+        "tasks": [
+          {
+            "title": "[Test] Self-host and validate on local machine",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Dev] Change Velocity key(s) to 'EnabledByDefault'",
+            "estimate": 0.25
+          },
+          {
+            "title": "[Dev] Cherry-pick (as applicable)",
+            "estimate": 2
+          }
+        ]
+      }
+    ]
+  }
+}

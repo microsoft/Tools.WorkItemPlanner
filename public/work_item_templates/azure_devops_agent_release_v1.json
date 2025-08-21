@@ -1,0 +1,60 @@
+{
+  "version": "1.0.0",
+  "template": {
+    "workitems": [
+      {
+        "title": "Agent Build & Rollout - .NET 8",
+        "tasks": [
+          {
+            "title": "Create Agent v4 Build",
+            "estimate": 0.25
+          },
+          {
+            "title": "Deploy and test on PPE Scale Unit",
+            "estimate": 0.25
+          },
+          {
+            "title": "File R2D Safe Fly Request for Agent v3/v4",
+            "estimate": 0.25
+          },
+          {
+            "title": "Complete AzureDevOps.ConfigChange PR for Agent v4",
+            "estimate": 0
+          },
+          {
+            "title": "Rollout Agent v4 to Ring 0",
+            "estimate": 0
+          },
+          {
+            "title": "Mark v4 GitHub Release listing as 'latest' & uncheck 'pre-release'",
+            "estimate": 0
+          },
+          {
+            "title": "Rollout Agent v4 to Ring 1",
+            "estimate": 0
+          },
+          {
+            "title": "Rollout Agent v4 to Ring 2",
+            "estimate": 0
+          },
+          {
+            "title": "Rollout Agent v4 to Ring 3",
+            "estimate": 0
+          },
+          {
+            "title": "Rollout Agent v4 to Ring 4",
+            "estimate": 0
+          },
+          {
+            "title": "Rollout Agent v4 to Ring 5",
+            "estimate": 0
+          },
+          {
+            "title": "Complete TFS Servicing PR for Agent v4 (after Ring 5 rollout)",
+            "estimate": 0
+          }
+        ]
+      }
+    ]
+  }
+}

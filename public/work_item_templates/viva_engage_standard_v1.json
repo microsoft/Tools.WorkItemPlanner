@@ -1,0 +1,355 @@
+{
+  "version": "1.0.0",
+  "template": {
+    "workitems": [
+      {
+        "title": "[Rollout] Basic consumption and MVP experience (R0)",
+        "description": "Ensure quality and that features work as intended for the MVP scope of integration, gathering early feedback on the core consumption experience.",
+        "tasks": [
+          {
+            "title": "Ensure each workflow is in the ring for at least 1 week",
+            "description": "This task is a placeholder to ensure each workflow meets the minimum duration requirement of 1 week in the ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Test all workflows related to basic consumption and MVP scope in Team-food",
+            "description": "Test all workflows to ensure there are no P0 bugs for the MVP integration scope and basic consumption scope.",
+            "estimate": 0
+          },
+          {
+            "title": "Address all top issues from R0 dogfooding feedback",
+            "description": "Fix top issues identified during the R0 dogfooding phase that are not from a vocal minority.",
+            "estimate": 0
+          },
+          {
+            "title": "Conduct security, privacy, and compliance/CELA reviews",
+            "description": "Complete all security, privacy, and compliance/CELA reviews for the basic consumption and MVP scope.",
+            "estimate": 0
+          },
+          {
+            "title": "Complete a preliminary accessibility design review",
+            "description": "Conduct a preliminary accessibility review and identify all bugs.",
+            "estimate": 0
+          },
+          {
+            "title": "Complete localization for all strings",
+            "description": "Ensure all strings are translated and localization is complete.",
+            "estimate": 0
+          },
+          {
+            "title": "Set up alerts for key features",
+            "description": "Implement alerts to monitor the key features in the ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Establish runbooks for rollback plans",
+            "description": "Create detailed runbooks for rolling back the features in case of issues.",
+            "estimate": 0
+          },
+          {
+            "title": "Confirm Teams engineers and LT can opt-in to the ring",
+            "description": "Validate that the audience can successfully opt-in to the ring as planned.",
+            "estimate": 0
+          },
+          {
+            "title": "Set up telemetry for core metrics",
+            "description": "Implement telemetry to track core metrics for the ring.",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "[Rollout] Dog fooding and Early Signals (R1)",
+        "description": "Gather early signals from Teams and Engage orgs around UX and identify major issues before expanding the audience.",
+        "tasks": [
+          {
+            "title": "Ensure each workflow is in the ring for at least 1 week",
+            "description": "This task is a placeholder to ensure each workflow meets the minimum duration requirement of 1 week in the ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Address all top issues from R0 dogfooding feedback",
+            "description": "Fix top issues from R0 dogfooding feedback that are not from a vocal minority.",
+            "estimate": 0
+          },
+          {
+            "title": "Conduct a globalization review",
+            "description": "Complete a self-serve globalization review of the feature.",
+            "estimate": 0
+          },
+          {
+            "title": "Complete the final accessibility review and fix all Sev 1 and Sev 2 bugs",
+            "description": "Conduct the final accessibility review and ensure all Sev 1 and Sev 2 bugs are fixed.",
+            "estimate": 0
+          },
+          {
+            "title": "Implement dashboards for performance and reliability",
+            "description": "Create dashboards to monitor performance and reliability metrics.",
+            "estimate": 0
+          },
+          {
+            "title": "Conduct hands-on review with Teams",
+            "description": "Perform a hands-on review with the Teams engineering team.",
+            "estimate": 0
+          },
+          {
+            "title": "Address all P1 bugs",
+            "description": "Fix all P1 bugs identified in this ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Validate experiment is configured for 80/20 audience",
+            "description": "Confirm that the experiment is set up with an 80/20 audience split as intended.",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "[Rollout] MS Fast Ring Exposure (R2)",
+        "description": "Test and confirm feature functionality with a broader internal audience, including accessibility users.",
+        "tasks": [
+          {
+            "title": "Ensure workflows are in the ring for at least 2 weeks",
+            "description": "This task is a placeholder to ensure all workflows meet the minimum duration requirement of 2 weeks in the ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Complete all workflows for Public Preview, including mobile",
+            "description": "Ensure all workflows required for Public Preview are complete, up to PM and Design spec, and tested on mobile.",
+            "estimate": 0
+          },
+          {
+            "title": "Obtain Teams accessibility review sign-off",
+            "description": "Get sign-off from the Teams accessibility review and ensure all P1 and P2 bugs are fixed.",
+            "estimate": 0
+          },
+          {
+            "title": "Get global readiness sign-off",
+            "description": "Obtain the global readiness sign-off for the feature.",
+            "estimate": 0
+          },
+          {
+            "title": "Conduct hands-on review with Teams and Engage",
+            "description": "Perform a hands-on review with the Teams and Engage teams.",
+            "estimate": 0
+          },
+          {
+            "title": "Address all P1 and P2 bugs",
+            "description": "Fix all P1 and P2 bugs identified in this ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Address all top issues from R2 feedback",
+            "description": "Fix top issues identified from the feedback gathered in the R2 ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Implement CIFX tests for each team",
+            "description": "Ensure each team has implemented their CIFX tests.",
+            "estimate": 0
+          },
+          {
+            "title": "Ensure MSIT is ready for the change",
+            "description": "Coordinate with MSIT to ensure they are prepared for the change.",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "[Rollout] MSD Ring Exposure (R3.9)",
+        "description": "Evaluate feature adoption and measure satisfaction/impact on desired user outcomes with a broader internal and external customer base.",
+        "tasks": [
+          {
+            "title": "Ensure all workflows are in the ring for at least 2 weeks",
+            "description": "This task is a placeholder to ensure all workflows meet the minimum duration requirement of 2 weeks in the ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Complete all workflows for Public Preview, including mobile",
+            "description": "Ensure all workflows required for Public Preview are complete, up to PM and Design spec, and tested on mobile.",
+            "estimate": 0
+          },
+          {
+            "title": "Review the E2E experience with MSD team",
+            "description": "Review the end-to-end experience with the MS Digital team and see if they want additional changes/comms.",
+            "estimate": 0
+          },
+          {
+            "title": "Ensure support team has awareness of integration",
+            "description": "Inform the support team about the integration prior to TAP.",
+            "estimate": 0
+          },
+          {
+            "title": "Address all P1 and P2 bugs",
+            "description": "Fix all P1 and P2 bugs identified in this ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Address all top issues from R3.9 feedback",
+            "description": "Fix all top issues identified from feedback in the R3.9 ring.",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "[Rollout] TAP Admins Release (R1.5)",
+        "description": "Gather early signals from external customers and identify readiness for R3.",
+        "tasks": [
+          {
+            "title": "Ensure workflows are in the ring for at least 2 weeks",
+            "description": "This task is a placeholder to ensure all workflows meet the minimum duration requirement of 2 weeks in the ring, with a minimum of 2 weeks to R3.",
+            "estimate": 0
+          },
+          {
+            "title": "Complete all workflows for Public Preview, including mobile",
+            "description": "Ensure all workflows required for Public Preview are complete, up to PM and Design spec, and tested on mobile.",
+            "estimate": 0
+          },
+          {
+            "title": "Address all P1 and P2 bugs",
+            "description": "Fix all P1 and P2 bugs identified in this ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Address all top issues from TAP Admin feedback",
+            "description": "Fix all top issues identified from feedback from TAP admins.",
+            "estimate": 0
+          },
+          {
+            "title": "Close all blocking issues from Teams Experience Review",
+            "description": "Ensure all blocking issues from the Teams Experience Review are closed.",
+            "estimate": 0
+          },
+          {
+            "title": "Obtain sign-offs from 10 customers on defined scenarios",
+            "description": "Get sign-offs from approximately 10 customers on the defined scenarios.",
+            "estimate": 0
+          },
+          {
+            "title": "Prepare comms and join CAB session call",
+            "description": "Follow the TAP release process by preparing communications and joining the CAB session call.",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "[Rollout] TAP Customer Release (R3)",
+        "description": "Gather early signals from external customers and end users and identify readiness for Public Preview.",
+        "tasks": [
+          {
+            "title": "Ensure all workflows are in the ring for at least 4 weeks",
+            "description": "This task is a placeholder to ensure all workflows meet the minimum duration requirement of 4 weeks in the ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Address critical feedback from R3.9 and R1.5",
+            "description": "Fix critical feedback from the R3.9 and R1.5 rings.",
+            "estimate": 0
+          },
+          {
+            "title": "Obtain sign-off from 20 TAP admins on test cases",
+            "description": "Get sign-off from at least 20 TAP admins on the test cases.",
+            "estimate": 0
+          },
+          {
+            "title": "Publish roadmap item and MC post",
+            "description": "Publish the roadmap item and a 60-day notice MC post.",
+            "estimate": 0
+          },
+          {
+            "title": "Complete final sign-off from security, privacy, and compliance",
+            "description": "Get the final sign-off from security, privacy, and compliance/CELA.",
+            "estimate": 0
+          },
+          {
+            "title": "Address all accessibility bugs",
+            "description": "Fix all remaining accessibility bugs.",
+            "estimate": 0
+          },
+          {
+            "title": "Onboard support team and publish public documentation",
+            "description": "Fully onboard the support team and publish all end-user and admin public support documentation.",
+            "estimate": 0
+          },
+          {
+            "title": "Establish scalable solution for collecting TAP user feedback",
+            "description": "Create a scalable solution for collecting and reviewing feedback from TAP users.",
+            "estimate": 0
+          },
+          {
+            "title": "Implement SLA runbooks and support escalation processes",
+            "description": "Create and implement SLA runbooks and agree on support escalation processes with Engineering.",
+            "estimate": 0
+          },
+          {
+            "title": "Conduct user interviews and focus groups for new features",
+            "description": "Organize and conduct interviews and focus groups to ensure new features are usable and have a majority positive sentiment.",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "[Rollout] Public Preview Release (R3.6)",
+        "description": "Evaluate feature adoption and measure satisfaction/impact on desired user outcomes from real-world users who opt-in.",
+        "tasks": [
+          {
+            "title": "Ensure all workflows are in the ring for at least 4 weeks",
+            "description": "This task is a placeholder to ensure all workflows meet the minimum duration requirement of 4 weeks in the ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Address critical feedback from R3",
+            "description": "Fix critical feedback identified during the R3 ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Validate usage in at least 50 opted-in orgs",
+            "description": "Verify that the feature is being used in at least 50 opted-in organizations for validation.",
+            "estimate": 0
+          },
+          {
+            "title": "Onboard support team for global scale",
+            "description": "Ensure the support team is fully onboarded and ready to support the feature at a global scale.",
+            "estimate": 0
+          },
+          {
+            "title": "Set up scalable solution for collecting public preview user feedback",
+            "description": "Create a scalable solution for collecting and reviewing feedback from public preview users.",
+            "estimate": 0
+          }
+        ]
+      },
+      {
+        "title": "[Rollout] General Availability (R4)",
+        "description": "Launch the feature to the rest of the world and evaluate performance against hypotheses.",
+        "tasks": [
+          {
+            "title": "Address critical feedback from R3",
+            "description": "Fix any critical feedback identified from the R3 ring.",
+            "estimate": 0
+          },
+          {
+            "title": "Publish a 60-day notice MC post and public roadmap",
+            "description": "Publish the 60-day notice MC post and the public roadmap for the feature.",
+            "estimate": 0
+          },
+          {
+            "title": "Remove preview tags from all public documentation",
+            "description": "Update all public support documentation to remove the 'preview' tag.",
+            "estimate": 0
+          },
+          {
+            "title": "Publish blog posts and announcements",
+            "description": "Publish blog posts and other announcements on Teams, Engage, and customer connection communities.",
+            "estimate": 0
+          },
+          {
+            "title": "Monitor core and secondary metrics for ongoing success",
+            "description": "Continuously monitor core and secondary metrics to track ongoing success and inform future steps.",
+            "estimate": 0
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+trigger:
+  branches:
+    include:
+    - master
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+- task: NodeTool@0
+  displayName: 'Install Node.js 20.x'
+  inputs:
+    versionSource: 'spec'
+    versionSpec: '20.x'
+    checkLatest: true
+
+- task: Npm@1
+  displayName: 'Install Node Packages'
+  inputs:
+    command: 'install'
+
+- task: ArchiveFiles@2
+  displayName: 'Package application'
+  inputs:
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(System.DefaultWorkingDirectory)/WorkItemPlanner-$(Build.BuildId).zip'
+    replaceExistingArchive: true
+
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
+  inputs:
+    azureSubscription: 'Agent and Tasks (rg-WorkItemPlanner)'
+    appType: 'webApp'
+    appName: 'WorkItemPlanner'
+    package: '$(System.DefaultWorkingDirectory)/WorkItemPlanner-$(Build.BuildId).zip'
+    deploymentMethod: 'zipDeploy'

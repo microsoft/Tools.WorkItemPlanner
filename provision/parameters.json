@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sites_FeaturePlanner_name": {
+            "value": null
+        },
+        "components_FeaturePlanner_name": {
+            "value": null
+        },
+        "serverfarms_ASP_rgFeaturePlanner_9c6a_name": {
+            "value": null
+        },
+        "actionGroups_Application_Insights_Smart_Detection_name": {
+            "value": null
+        },
+        "certificates_workitemplanner_codeapp_ms_FeaturePlanner_name": {
+            "value": null
+        },
+        "dashboards_87474278_1b55_4506_8ec5_600e098ef614_dashboard_name": {
+            "value": null
+        },
+        "smartdetectoralertrules_failure_anomalies___featureplanner_name": {
+            "value": null
+        },
+        "workspaces_DefaultWorkspace_fd8ab19b_944d_40f1_b13b_e2036680bf7e_EUS2_externalid": {
+            "value": null
+        }
+    }
+}

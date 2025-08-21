@@ -1,0 +1,97 @@
+{
+  "version": "1.0.0",
+  "template": {
+    "workitems": [
+      {
+        "title": "Engineering Design & Approval",
+        "tasks": [
+          {
+            "title": "[Dev] Engineering Design Doc/Discussion",
+            "estimate": 2
+          },
+          {
+            "title": "[Dev] Identify version upgrade impact",
+            "estimate": 0
+          },
+          {
+            "title": "[Dev][Review] Approval of Engineering Design Doc/Discussion",
+            "estimate": 0.25
+          }
+        ]
+      },
+      {
+        "title": "Task Implementation",
+        "tasks": [
+          {
+            "title": "[Dev] Implement Task",
+            "estimate": 5
+          },
+          {
+            "title": "[Dev] Add new Task to 'make-options.json' file in 'azure-pipelines-tasks' repo",
+            "estimate": 0.25
+          },
+          {
+            "title": "[Dev] Add new Task ownership in the '.github/codeowners' file in 'azure-pipelines-tasks' repo",
+            "estimate": 0.25
+          }
+        ]
+      },
+      {
+        "title": "Task Integration and Servicing in TFS",
+        "tasks": [
+          {
+            "title": "[Dev] Add new Task to the 'UnifiedDependencies.xml' file in the 'AzureDevOps' repo - Ex: https://mseng.visualstudio.com/AzureDevOps/_git/AzureDevOps/pullrequest/627636",
+            "estimate": 0.25
+          },
+          {
+            "title": "[Dev] Add new Task to the 'TfsServer.Servicing.core.xml' file in the 'AzureDevOps' repo - Ex: https://mseng.visualstudio.com/AzureDevOps/_git/AzureDevOps/pullrequest/629749",
+            "estimate": 0.25
+          }
+        ]
+      },
+      {
+        "title": "Task UI, Documentation & Localization",
+        "tasks": [
+          {
+            "title": "[Dev][PM/Design] Seek for Task Input strings from PM/Design",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Dev] Add LocItem for the new Task to the Localization branch - Ex: https://github.com/microsoft/azure-pipelines-tasks/pull/15178/files",
+            "estimate": 0.25
+          },
+          {
+            "title": "[Dev][Doc] Create Public documentation for the new Task  - Ex: https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/java-tool-installer-v0?view=azure-pipelines",
+            "estimate": 0.25
+          }
+        ]
+      },
+      {
+        "title": "Test(s) Setup & Validation",
+        "tasks": [
+          {
+            "title": "[Dev][Test] Create pipeline in 'canarytest' org test the Task - Ex: https://dev.azure.com/canarytest/PipelineTasks/_build?definitionId=206&_a=summary",
+            "estimate": 0.5
+          },
+          {
+            "title": "[Dev] E2E Testing and local Validation",
+            "estimate": 1
+          }
+        ]
+      },
+      {
+        "title": "Rollout & Test",
+        "tasks": [
+          {
+            "title": "[Test] Validate Task on inner Ring(s)",
+            "estimate": 0.25
+          },
+          {
+            "title": "[Test] Validate Task on external Ring(s)",
+            "estimate": 0.25
+          }
+        ]
+      }
+    ]
+  }
+}
