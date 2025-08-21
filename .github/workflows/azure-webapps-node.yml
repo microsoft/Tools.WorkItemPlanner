@@ -1,4 +1,4 @@
-name: Build and Deploy Node.js App to Azure Web App
+name: Tools.WorkItemPlanner-deploy
 
 on:
   push:
