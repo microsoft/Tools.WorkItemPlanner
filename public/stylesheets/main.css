@@ -796,8 +796,14 @@ body.plain-text-mode .task-description:focus {
 }
 
 .custom-dropdown.disabled {
-  opacity: 0.6;
+  opacity: 1;
   pointer-events: none;
+}
+
+.custom-dropdown.disabled .custom-dropdown-selected {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
 }
 
 .custom-dropdown-selected {
