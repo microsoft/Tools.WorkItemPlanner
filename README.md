@@ -8,14 +8,17 @@ Work Item Planner is a web application that allows users to generate Work Items 
 
 ### Hosted Version
 
-The application is hosted using Azure App Service (Web App).
+The application is hosted using a Linux based Azure App Service (Web App).
 
-- Azure App Service Web App: [WorkItemPlanner](https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/fd8ab19b-944d-40f1-b13b-e2036680bf7e/resourceGroups/rg-WorkItemPlanner/providers/Microsoft.Web/sites/WorkItemPlanner/appServices)
-- Subscription Name: AzDev-Agents&Tasks-Test
-- Subscription ID: fd8ab19b-944d-40f1-b13b-e2036680bf7e
-- Tenant: Corp
+| Resource | Details |
+| --- | --- |
+| Azure App Service Web App | [WorkItemPlanner](https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/fd8ab19b-944d-40f1-b13b-e2036680bf7e/resourceGroups/rg-WorkItemPlanner/providers/Microsoft.Web/sites/WorkItemPlanner/appServices) |
+| Subscription Name | AzDev-Agents&Tasks-Test |
+| Subscription ID | fd8ab19b-944d-40f1-b13b-e2036680bf7e |
+| Tenant | Corp |
 
-Application URL: https://workitemplanner.codeapp.ms/
+Application URL: https://workitemplanner.codeapp.ms
+
 Vanity URL: https://aka.ms/workitemplanner, https://aka.ms/featureplanner, https://aka.ms/scenarioplanner
 
 ### Deployment
@@ -26,7 +29,7 @@ Vanity URL: https://aka.ms/workitemplanner, https://aka.ms/featureplanner, https
 1. Install the [App Service extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azureappservice) for Visual Studio Code.
 1. In the App Service explorer, select the mentioned App Service, right click on it and click deploy.
 
-Refer to [this](https://learn.microsoft.com/en-us/azure/app-service/quickstart-nodejs?tabs=windows&pivots=development-environment-vscode#configure-the-app-service-app-and-deploy-code) document for the detailed deployment steps. Ignore the steps which create the App Service itself.
+Refer to [this](https://learn.microsoft.com/en-us/azure/app-service/quickstart-nodejs?tabs=linux&pivots=development-environment-vscode#configure-the-app-service-app-and-deploy-code) document for the detailed deployment steps. Ignore the steps which create the App Service itself.
 
 #### Automated Deployment
 
@@ -100,9 +103,9 @@ Example: wpx_engineering_dcr_v1.json, wpx_product_moments_v1.json
 
 3. Clone the repository: `git clone https://github.com/microsoft/Tools.WorkItemPlanner.git` and create a local branch.
 
-4. Save the template at the this location '\Tools.WorkItemPlanner\public\work_item_templates'.
+4. Save the template at the this location `\Tools.WorkItemPlanner\public\work_item_templates`.
 
-5. Add the template file name and the display name to the 'work_item_templates_index.js' file located in '\tools.WorkItemPlanner\public\work_item_templates'. Ensure adherence to the existing naming convention in the file.
+5. Add the template file name and the display name to the 'work_item_templates_index.js' file located in `\tools.WorkItemPlanner\public\work_item_templates`. Ensure adherence to the existing naming convention in the file.
 
 6. Raise a pull request to the 'main' branch with the above additions.
 
@@ -133,7 +136,7 @@ If you upload a .json file to the Windows Azure website and try to access it, it
 
 1. Azure Application Insights Connection String is provided as an environment variable `APPLICATIONINSIGHTS_CONNECTION_STRING`.
 
-## Deployment and Certificate Management
+## Deployment Setup and Certificate Management
 
 ### Code Deployment (GitHub → Azure Web App)
 
@@ -173,17 +176,27 @@ Instead, obtain the certificate via an **Azure Key Vault** backed by **OneCert**
 - Centralized certificate governance (issuance, rotation, expiry alerts) via OneCert.
 - Consistent auditing & RBAC through Key Vault.
 - Decoupled lifecycle management enabling proactive rotation without web app restarts tied to portal automation windows.
+### Managed Identity Setup
+
+- System-assigned managed identity (Web App): enabled on the App Service and granted the minimal Key Vault RBAC permissions required to read the TLS certificate (Key Vault Secrets User). This identity is used by the Web App to fetch and bind the certificate at runtime.
+
+- User-assigned managed identity (GitHub Actions): a separate user-assigned Managed Identity (WorkItemPlanner-Identity) was created and configured with a federated credential that trusts the repository/workflow. This identity has Contributor access on the Resource Group to allow OIDC-based deployments from GitHub Actions.
+
+Security notes:
+- Prefer least-privilege RBAC (scope to the Web App or specific resources instead of the whole resource group where possible).
+- Restrict the federated credential to the specific repository and workflow.
+- Use OIDC federation to avoid long-lived secrets and periodically review assigned permissions.
 
 ## Contributing
 
 Contributions are welcome! If you find any bugs or have suggestions for improvements, please submit a pull request or reach out to <adityamankal@microsoft.com>.
 
-## Future plan
+## Future Roadmap
 
-- Implement SSO with User Identity (or) Service Principal - COMPLETED
+- Implement Single Sign on - COMPLETED
 - Support for custom templates - COMPLETED
-- Telemetry - COMPLETED
-- Work Item Description (Rich Text) - COMPLETED
+- Track Telemetry - COMPLETED
+- Support Work Item Description (Rich Text) - COMPLETED
 
 ## SDL Assessment
 
