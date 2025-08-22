@@ -574,7 +574,8 @@ $("#team-select").on("change", function () {
         return fetchAreaPathsForTeam();
       })
       .then(() => {
-        fetchUsersInTeam(); // Fetch and populate users
+        showLoadingIndicator("Fetching Team Members...");
+        return fetchUsersInTeam();
       })
       .catch((error) => {
         console.error("Error fetching team data:", error);

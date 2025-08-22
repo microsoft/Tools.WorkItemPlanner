@@ -1349,7 +1349,8 @@ async function fetchUsersInTeam() {
   const team = $("#team-select").val();
 
   if (organization && project && team) {
-    const url = `https://dev.azure.com/${organization}/_apis/projects/${project}/teams/${team}/members?api-version=7.0`;
+    // Use expandMembership=true to get all nested group members (Entra Groups, nested teams, etc.)
+    const url = `https://dev.azure.com/${organization}/_apis/projects/${project}/teams/${team}/members?$expandMembership=true&api-version=7.0`;
     const authHeaders = await generateAuthHeaders(usePAT);
     return $.ajax({
       url: url,
@@ -1358,6 +1359,7 @@ async function fetchUsersInTeam() {
     })
       .done((data) => {
         //hideLoadingIndicator();
+        console.log("Fetched expanded team members:", data.value.length, "members");
         populateAssignedToDropdown(data.value); // Populate the dropdown on success
       })
       .fail((xhr, textStatus, errorThrown) => {
@@ -1401,19 +1403,32 @@ function populateAssignedToDropdown(users) {
   }
 
   if (users && users.length > 0) {
+    // Filter out invalid users and sort by displayName
+    const validUsers = users.filter((user) => {
+      const identity = user.identity;
+      return identity && 
+             identity.displayName && 
+             identity.uniqueName && 
+             identity.uniqueName !== userEmailId && 
+             emailRegex.test(identity.uniqueName) &&
+             // Filter out service accounts and inactive users
+             !identity.displayName.toLowerCase().includes('[service]') &&
+             !identity.displayName.toLowerCase().includes('[inactive]') &&
+             // Only include users, not groups
+             (!user.isContainer || user.isContainer === false);
+    });
+
     // Sort users by displayName
-    users.sort((a, b) => a.identity.displayName.localeCompare(b.identity.displayName));
+    validUsers.sort((a, b) => a.identity.displayName.localeCompare(b.identity.displayName));
 
     // Populate dropdown with the sorted and valid users
-    users.forEach((user) => {
+    validUsers.forEach((user) => {
       const displayName = user.identity.displayName;
       const emailAddress = user.identity.uniqueName;
-
-      // Only add the option if displayName and emailAddress are valid and emailAddress is a valid email
-      if (displayName && emailAddress && emailAddress !== userEmailId && emailRegex.test(emailAddress)) {
-        $assignedToDropdown.append(new Option(displayName, emailAddress));
-      }
+      $assignedToDropdown.append(new Option(displayName, emailAddress));
     });
+
+    console.log(`Populated dropdown with ${validUsers.length} valid users out of ${users.length} total members`);
   }
 
   $assignedToDropdown.prop("disabled", false); // Enables the dropdown
