@@ -26,5 +26,9 @@ const workItemTemplatesList = [
   {
     fileName: "w_d_engineering_dcr_v1.json",
     displayName: "W + D - Engineering - DCR - v1"
+  },
+  {
+    fileName: "w_d_voice_access_sdk_update_v1.json",
+    displayName: "W + D - Voice Access - SDK Update - v1"
   }
 ];

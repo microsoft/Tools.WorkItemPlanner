@@ -1,0 +1,153 @@
+{
+  "version": "1.0.0",
+  "template": {
+    "workitems": [
+      {
+        "title": "[Rollout] Speech SDK Update Validation and Containment for Accessibility Tools",
+        "description": "End-to-end rollout and validation of the latest Speech SDK update across Voice Access, Live Captions, Voice Typing, and Narrator accessibility tools.",
+        "tasks": [
+          {
+            "title": "Local dev machine validation for Voice Access",
+            "description": "Validate Speech SDK update on local dev machine for Voice Access.",
+            "estimate": 0
+          },
+          {
+            "title": "Local dev machine validation for Live Captions",
+            "description": "Validate Speech SDK update on local dev machine for Live Captions.",
+            "estimate": 0
+          },
+          {
+            "title": "Local dev machine validation for Voice Typing",
+            "description": "Validate Speech SDK update on local dev machine for Voice Typing.",
+            "estimate": 0
+          },
+          {
+            "title": "Local dev machine validation for Narrator",
+            "description": "Validate Speech SDK update on local dev machine for Narrator.",
+            "estimate": 0
+          },
+          {
+            "title": "Create SXS velocity for Voice Access",
+            "description": "Create velocity for Voice Access using SXS for containment.",
+            "estimate": 0
+          },
+          {
+            "title": "Create SXS velocity for Live Captions",
+            "description": "Create velocity for Live Captions using SXS for containment.",
+            "estimate": 0
+          },
+          {
+            "title": "Create SXS velocity for Voice Typing",
+            "description": "Create velocity for Voice Typing using SXS for containment.",
+            "estimate": 0
+          },
+          {
+            "title": "Create SXS velocity for Narrator",
+            "description": "Create velocity for Narrator using SXS for containment.",
+            "estimate": 0
+          },
+          {
+            "title": "Create feature branch for Voice Access after velocity creation",
+            "description": "Create a feature branch for Voice Access after velocity is created.",
+            "estimate": 0
+          },
+          {
+            "title": "Create feature branch for Live Captions after velocity creation",
+            "description": "Create a feature branch for Live Captions after velocity is created.",
+            "estimate": 0
+          },
+          {
+            "title": "Create feature branch for Voice Typing after velocity creation",
+            "description": "Create a feature branch for Voice Typing after velocity is created.",
+            "estimate": 0
+          },
+          {
+            "title": "Create feature branch for Narrator after velocity creation",
+            "description": "Create a feature branch for Narrator after velocity is created.",
+            "estimate": 0
+          },
+          {
+            "title": "Raise PR to update SDK in feature branch for Voice Access",
+            "description": "Raise a pull request to update Speech SDK in the Voice Access feature branch.",
+            "estimate": 0
+          },
+          {
+            "title": "Raise PR to update SDK in feature branch for Live Captions",
+            "description": "Raise a pull request to update Speech SDK in the Live Captions feature branch.",
+            "estimate": 0
+          },
+          {
+            "title": "Raise PR to update SDK in feature branch for Voice Typing",
+            "description": "Raise a pull request to update Speech SDK in the Voice Typing feature branch.",
+            "estimate": 0
+          },
+          {
+            "title": "Raise PR to update SDK in feature branch for Narrator",
+            "description": "Raise a pull request to update Speech SDK in the Narrator feature branch.",
+            "estimate": 0
+          },
+          {
+            "title": "VM validation for Voice Access",
+            "description": "Validate Speech SDK update on VM for Voice Access.",
+            "estimate": 0
+          },
+          {
+            "title": "VM validation for Live Captions",
+            "description": "Validate Speech SDK update on VM for Live Captions.",
+            "estimate": 0
+          },
+          {
+            "title": "VM validation for Voice Typing",
+            "description": "Validate Speech SDK update on VM for Voice Typing.",
+            "estimate": 0
+          },
+          {
+            "title": "VM validation for Narrator",
+            "description": "Validate Speech SDK update on VM for Narrator.",
+            "estimate": 0
+          },
+          {
+            "title": "Start CFR for Voice Access and monitor at each level",
+            "description": "Start CFR for Voice Access and monitor progress at each rollout level.",
+            "estimate": 0
+          },
+          {
+            "title": "Start CFR for Live Captions and monitor at each level",
+            "description": "Start CFR for Live Captions and monitor progress at each rollout level.",
+            "estimate": 0
+          },
+          {
+            "title": "Start CFR for Voice Typing and monitor at each level",
+            "description": "Start CFR for Voice Typing and monitor progress at each rollout level.",
+            "estimate": 0
+          },
+          {
+            "title": "Start CFR for Narrator and monitor at each level",
+            "description": "Start CFR for Narrator and monitor progress at each rollout level.",
+            "estimate": 0
+          },
+          {
+            "title": "Enable velocity key for Voice Access",
+            "description": "Enable velocity key for Voice Access.",
+            "estimate": 0
+          },
+          {
+            "title": "Enable velocity key for Live Captions",
+            "description": "Enable velocity key for Live Captions.",
+            "estimate": 0
+          },
+          {
+            "title": "Enable velocity key for Voice Typing",
+            "description": "Enable velocity key for Voice Typing.",
+            "estimate": 0
+          },
+          {
+            "title": "Enable velocity key for Narrator",
+            "description": "Enable velocity key for Narrator.",
+            "estimate": 0
+          }
+        ]
+      }
+    ]
+  }
+}
