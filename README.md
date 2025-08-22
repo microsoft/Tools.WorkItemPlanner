@@ -118,18 +118,18 @@ Teams have the choice to onboard their own template i.e., customized choice of W
 }
 ```
 
-2. Ensure to name the template in strict adherence to the following pattern - teamname_category_release_version.
+2. Ensure to name the template in adherence to the following pattern - teamname_category_process_version.
 
-|  | |
-| -------- | ------- |
-| 'teamname'  | your team name |
-| 'category' | 'engineering' or 'design' or 'product' |
-| 'release' | 'moments' or 'dcr' |
-| 'version' | numeric version with the letter 'v' as prefix |
+|  |  |
+| ---------- | ------- |
+| 'teamname' | your team name |
+| 'category' | Ex: 'engineering', 'design', 'product', etc. |
+| 'process'  | Ex: 'standard', 'rollout', 'hotfix', etc. |
+| 'version'  | numeric version with the letter 'v' as prefix |
 
 ` File name cannot contain any special characters other than underscore(_) or whitespace( ) `
 
-Example: wpx_engineering_dcr_v1.json, wpx_product_moments_v1.json
+Example: wpx_engineering_dcr_v1.json, wpx_product_moments_v1.json, viva_engage_standard_v1.json, azure_devops_agent_release_v1.json
 
 3. Clone the repository: `git clone https://github.com/microsoft/Tools.WorkItemPlanner.git` and create a local branch.
 
