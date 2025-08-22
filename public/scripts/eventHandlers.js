@@ -38,8 +38,14 @@ $("#add-deliverable").on("click", function (e) {
     $newDeliverable.find("input, textarea").val("");
     
     // Clear rich text editor content
-    $newDeliverable.find(".deliverable-description").empty();
-    $newDeliverable.find(".task-description").empty();
+    if (window.ENABLE_RICH_TEXT_EDITOR) {
+      $newDeliverable.find(".deliverable-description").empty();
+      $newDeliverable.find(".task-description").empty();
+    } else {
+      // For plain text mode, clear text content
+      $newDeliverable.find(".deliverable-description").text("");
+      $newDeliverable.find(".task-description").text("");
+    }
 
     // Set the prefix value
     const prefixValue = $("#deliverable-prefix").val();
@@ -134,7 +140,12 @@ $(document).on("click", ".add-task-btn", function (e) {
   $taskItem.find("input, textarea").val("");
   
   // Clear rich text editor content
-  $taskItem.find(".task-description").empty();
+  if (window.ENABLE_RICH_TEXT_EDITOR) {
+    $taskItem.find(".task-description").empty();
+  } else {
+    // For plain text mode, clear text content
+    $taskItem.find(".task-description").text("");
+  }
   
   // Reset description section to collapsed state for new task
   $taskItem.find(".description-section").hide();
@@ -184,9 +195,9 @@ $("#feature-form").on("submit", function (e) {
       
       // Get rich text content for deliverable description
       const $deliverableDescEditor = $(this).find(".deliverable-description");
-      const deliverableDescription = window.RichTextEditor ? 
+      const deliverableDescription = (window.RichTextEditor && window.ENABLE_RICH_TEXT_EDITOR) ? 
         window.RichTextEditor.getRichTextContent($deliverableDescEditor).trim() : 
-        $deliverableDescEditor.html().trim();
+        $deliverableDescEditor.text().trim();
       
       const tasks = [];
 
@@ -199,9 +210,9 @@ $("#feature-form").on("submit", function (e) {
             
             // Get rich text content for task description
             const $taskDescEditor = $(this).find(".task-description");
-            const taskDescription = window.RichTextEditor ? 
+            const taskDescription = (window.RichTextEditor && window.ENABLE_RICH_TEXT_EDITOR) ? 
               window.RichTextEditor.getRichTextContent($taskDescEditor).trim() : 
-              $taskDescEditor.html().trim();
+              $taskDescEditor.text().trim();
             
             tasks.push({ 
               title: taskTitle, 
