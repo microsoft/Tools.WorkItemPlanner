@@ -86,6 +86,9 @@ async function onSuccessLogin() {
     tolerance: "pointer", // Drag only when pointer is inside the deliverable
   });
 
+  // Initialize custom dropdown event handlers
+  initializeCustomDropdownEvents();
+
   hideLoadingIndicator();
 }
 
@@ -1392,47 +1395,63 @@ async function fetchUsersInTeam() {
 
 // Function to clear assigned-to-select dropdown
 function clearAssignedToDropdown() {
-  // Check if custom dropdown exists
   const $customDropdown = $("#assigned-to-select-custom");
+  const $hiddenSelect = $("#assigned-to-select");
+  
   if ($customDropdown.length > 0) {
-    // Reset custom dropdown
+    // Reset custom dropdown to initial state
     $customDropdown.find('.dropdown-user-image').attr('src', 'images/profile_picture_placeholder.jpg');
     $customDropdown.find('.dropdown-text').text('Select an Assignee');
     $customDropdown.find('.custom-dropdown-options').empty();
     $customDropdown.removeClass('is-invalid');
-    
-    // Find and clear the hidden select
-    const $hiddenSelect = $customDropdown.next('select');
-    if ($hiddenSelect.length > 0) {
-      while ($hiddenSelect[0].options.length > 1) {
-        $hiddenSelect[0].remove(1);
-      }
-      $hiddenSelect[0].selectedIndex = 0;
-      $hiddenSelect[0].disabled = true;
+    $customDropdown.addClass('disabled');
+  }
+  
+  if ($hiddenSelect.length > 0) {
+    // Clear the hidden select
+    while ($hiddenSelect[0].options.length > 1) {
+      $hiddenSelect[0].remove(1);
     }
-  } else {
-    // Handle standard select dropdown
-    const assignedToSelect = document.getElementById("assigned-to-select");
-    if (assignedToSelect) {
-      // Remove all options except the first one
-      while (assignedToSelect.options.length > 1) {
-        assignedToSelect.remove(1);
-      }
-      assignedToSelect.selectedIndex = 0;
-      assignedToSelect.disabled = true;
-    }
+    $hiddenSelect[0].selectedIndex = 0;
+    $hiddenSelect[0].disabled = true;
+    $hiddenSelect.removeClass('is-invalid');
   }
 }
 
 // Function to populate the "Assigned To" dropdown
 function populateAssignedToDropdown(users) {
-  const $assignedToDropdown = $("#assigned-to-select");
   clearAssignedToDropdown();
+  
+  // Get the elements
+  const $customDropdown = $("#assigned-to-select-custom");
+  const $hiddenSelect = $("#assigned-to-select");
+  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
+  const $selected = $customDropdown.find('.custom-dropdown-selected');
+  
+  if (!$customDropdown.length || !$hiddenSelect.length) {
+    console.error("Assigned to dropdown elements not found");
+    return;
+  }
+
+  // Clear existing options
+  $optionsContainer.empty();
 
   // Add the current user as the default option
   if (userDisplayName && userEmailId) {
     const currentUserOption = new Option(userDisplayName, userEmailId, true, true);
-    $assignedToDropdown.append(currentUserOption);
+    $hiddenSelect.append(currentUserOption);
+    
+    // Set as selected in custom dropdown
+    const currentUserImage = document.querySelector(".user-profile-image");
+    let avatarUrl = 'images/profile_picture_placeholder.jpg';
+    if (currentUserImage && currentUserImage.src && !currentUserImage.src.includes('placeholder')) {
+      avatarUrl = currentUserImage.src;
+    } else {
+      avatarUrl = createAvatarCanvas(userDisplayName);
+    }
+    
+    $selected.find('.dropdown-user-image').attr('src', avatarUrl);
+    $selected.find('.dropdown-text').text(userDisplayName);
   }
 
   if (users && users.length > 0) {
@@ -1454,105 +1473,48 @@ function populateAssignedToDropdown(users) {
     // Sort users by displayName
     validUsers.sort((a, b) => a.identity.displayName.localeCompare(b.identity.displayName));
 
-    // Populate dropdown with the sorted and valid users
+    // Populate both dropdowns with the sorted and valid users
     for (const user of validUsers) {
       const displayName = user.identity.displayName;
       const emailAddress = user.identity.uniqueName;
       const userId = user.identity.id;
       
-      // Create option with data attributes for profile image
+      // Add to hidden select for form validation
       const option = new Option(displayName, emailAddress);
       option.setAttribute('data-user-id', userId);
       option.setAttribute('data-display-name', displayName);
-      $assignedToDropdown.append(option);
+      $hiddenSelect.append(option);
+      
+      // Add to custom dropdown with avatar
+      const initialAvatarUrl = createAvatarCanvas(displayName);
+      const $option = $(`
+        <div class="custom-dropdown-option" data-value="${emailAddress}">
+          <img class="dropdown-user-image" src="${initialAvatarUrl}" alt="${displayName}" data-user-id="${userId}" data-display-name="${displayName}">
+          <span>${displayName}</span>
+        </div>
+      `);
+      
+      $optionsContainer.append($option);
+      
+      // Load real avatar asynchronously (non-blocking)
+      loadUserAvatarAsync(userId, displayName, $option.find('.dropdown-user-image'), $selected, emailAddress);
     }
 
     console.log(`Populated dropdown with ${validUsers.length} valid users out of ${users.length} total members`);
-    
-    // Convert to custom dropdown with profile pictures (non-blocking)
-    convertToCustomDropdown($assignedToDropdown, users);
   }
 
-  $assignedToDropdown.prop("disabled", false); // Enables the dropdown
+  $hiddenSelect.prop("disabled", false);
+  $customDropdown.removeClass('disabled');
 }
 
-// Function to convert standard select to custom dropdown with profile pictures
-function convertToCustomDropdown($selectElement, users) {
-  const selectId = $selectElement.attr('id');
-  const isRequired = $selectElement.attr('required') !== undefined;
-  const isDisabled = $selectElement.prop('disabled');
+// Function to initialize custom dropdown event handlers
+function initializeCustomDropdownEvents() {
+  const $customDropdown = $("#assigned-to-select-custom");
+  const $hiddenSelect = $("#assigned-to-select");
   
-  // Create custom dropdown structure
-  const $customDropdown = $(`
-    <div class="custom-dropdown" id="${selectId}-custom">
-      <div class="custom-dropdown-selected" tabindex="0">
-        <img class="dropdown-user-image" src="images/profile_picture_placeholder.jpg" alt="">
-        <span class="dropdown-text">Select an Assignee</span>
-        <i class="fas fa-chevron-down dropdown-arrow"></i>
-      </div>
-      <div class="custom-dropdown-options" style="display: none;">
-      </div>
-    </div>
-  `);
-  
-  const $selected = $customDropdown.find('.custom-dropdown-selected');
-  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
-  const $hiddenSelect = $selectElement.clone().hide();
-  
-  // Populate options immediately with placeholder avatars, then load real avatars asynchronously
-  const options = $selectElement.find('option');
-  for (let i = 0; i < options.length; i++) {
-    const option = options[i];
-    const value = option.value;
-    const text = option.text;
-    const userId = option.getAttribute('data-user-id');
-    
-    if (value === '') continue; // Skip placeholder option
-    
-    // Start with placeholder or generated avatar
-    let initialAvatarUrl = 'images/profile_picture_placeholder.jpg';
-    if (value === userEmailId) {
-      // Use current user's profile image if available
-      const currentUserImage = document.querySelector(".user-profile-image");
-      if (currentUserImage && currentUserImage.src && !currentUserImage.src.includes('placeholder')) {
-        initialAvatarUrl = currentUserImage.src;
-      } else {
-        initialAvatarUrl = createAvatarCanvas(text);
-      }
-    } else {
-      // Use generated avatar for all other users initially
-      initialAvatarUrl = createAvatarCanvas(text);
-    }
-    
-    const $option = $(`
-      <div class="custom-dropdown-option" data-value="${value}">
-        <img class="dropdown-user-image" src="${initialAvatarUrl}" alt="${text}" data-user-id="${userId || ''}" data-display-name="${text}">
-        <span>${text}</span>
-      </div>
-    `);
-    
-    $optionsContainer.append($option);
-    
-    // Set default selection
-    if (option.selected) {
-      $selected.find('.dropdown-user-image').attr('src', initialAvatarUrl);
-      $selected.find('.dropdown-text').text(text);
-      $hiddenSelect.val(value);
-    }
-    
-    // Load real avatar asynchronously (non-blocking)
-    if (userId && value !== userEmailId) {
-      loadUserAvatarAsync(userId, text, $option.find('.dropdown-user-image'), $selected, value);
-    }
+  if ($customDropdown.length && $hiddenSelect.length) {
+    setupCustomDropdownEvents($customDropdown, $hiddenSelect, true);
   }
-  
-  // Replace original select with custom dropdown
-  $selectElement.after($customDropdown);
-  $selectElement.after($hiddenSelect);
-  $selectElement.remove();
-  
-  // Add event handlers
-  setupCustomDropdownEvents($customDropdown, $hiddenSelect, isRequired);
 }
 
 // Function to load user avatar asynchronously without blocking the UI
@@ -1560,13 +1522,16 @@ async function loadUserAvatarAsync(userId, displayName, $img, $selected, value) 
   try {
     const avatarUrl = await fetchUserAvatar(userId, displayName);
     
-    // Update the option image
-    $img.attr('src', avatarUrl);
-    
-    // If this is the currently selected option, update the selected display too
-    const $hiddenSelect = $selected.closest('.custom-dropdown').next('select');
-    if ($hiddenSelect.val() === value) {
-      $selected.find('.dropdown-user-image').attr('src', avatarUrl);
+    // Check if the elements still exist in the DOM before updating
+    if ($img.length && $img.closest('.custom-dropdown').length) {
+      // Update the option image
+      $img.attr('src', avatarUrl);
+      
+      // If this is the currently selected option, update the selected display too
+      const $hiddenSelect = $selected.closest('.custom-dropdown').next('select');
+      if ($hiddenSelect.length && $hiddenSelect.val() === value) {
+        $selected.find('.dropdown-user-image').attr('src', avatarUrl);
+      }
     }
   } catch (error) {
     console.warn(`Failed to load avatar for ${displayName}:`, error);
@@ -1823,7 +1788,7 @@ async function fetchUserAvatar(userId, displayName) {
       // Set a timeout to fallback if loading takes too long
       setTimeout(() => {
         resolve(createAvatarCanvas(displayName));
-      }, 2000);
+      }, 5000);
     });
     
   } catch (error) {

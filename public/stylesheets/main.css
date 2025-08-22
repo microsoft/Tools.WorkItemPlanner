@@ -795,6 +795,11 @@ body.plain-text-mode .task-description:focus {
   min-width: 300px; /* Increased minimum width */
 }
 
+.custom-dropdown.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .custom-dropdown-selected {
   display: flex;
   align-items: center;
