@@ -133,6 +133,47 @@ If you upload a .json file to the Windows Azure website and try to access it, it
 
 1. Azure Application Insights Connection String is provided as an environment variable `APPLICATIONINSIGHTS_CONNECTION_STRING`.
 
+## Deployment and Certificate Management
+
+### Code Deployment (GitHub → Azure Web App)
+
+This project uses **GitHub Actions with OpenID Connect (OIDC)** to deploy code directly to Azure App Service.  
+The flow looks like this:
+
+1. **GitHub Actions Workflow** authenticates to Azure using `azure/login@v2`.
+2. **Managed Identity (WorkItemPlanner-Identity)** in Azure AD has a **federated credential** that trusts the GitHub repo (`microsoft/Tools.WorkItemPlanner`).
+3. The Managed Identity is granted `Contributor` (or equivalent) permissions on the Web App.
+4. `azure/webapps-deploy@v3` publishes the build artifact to the App Service.
+
+🔹 This flow does **not** use a publish profile or Key Vault.  
+🔹 Authentication happens through Azure AD using OIDC, which is secure and does not require secret rotation.
+
+### TLS/SSL Certificate Binding (Azure Web App → Key Vault)
+
+The Web App also uses a **custom domain** secured with an SSL certificate stored in **Azure Key Vault**.
+
+1. The **Web App itself** must fetch the certificate from Key Vault.  
+   - This requires a **Managed Identity** assigned to the Web App.
+
+2. That identity must be granted access to the Key Vault.  
+   - Since the vault is configured for **Azure RBAC**, the required role is:
+     - `Key Vault Secrets User` (minimum required)
+   - Optionally, `Key Vault Certificates Officer` can be assigned for full certificate management.
+
+3. When adding a binding in the Portal, the Portal currently defaults to **system-assigned identity**.  
+
+4. Once imported, the certificate can be bound to the custom domain in TLS/SSL settings.
+
+#### Important: Don't use Azure Managed Certificate
+
+Azure Managed Certificates (the free App Service managed option) are **not** used for this application and should not be used.
+
+Instead, obtain the certificate via an **Azure Key Vault** backed by **OneCert**, then bind it to the Web App using the Web App's System Assigned Managed Identity. This ensures:
+
+- Centralized certificate governance (issuance, rotation, expiry alerts) via OneCert.
+- Consistent auditing & RBAC through Key Vault.
+- Decoupled lifecycle management enabling proactive rotation without web app restarts tied to portal automation windows.
+
 ## Contributing
 
 Contributions are welcome! If you find any bugs or have suggestions for improvements, please submit a pull request or reach out to <adityamankal@microsoft.com>.
@@ -142,7 +183,9 @@ Contributions are welcome! If you find any bugs or have suggestions for improvem
 - Implement SSO with User Identity (or) Service Principal - COMPLETED
 - Support for custom templates - COMPLETED
 - Telemetry - COMPLETED
+- Work Item Description (Rich Text) - COMPLETED
 
 ## SDL Assessment
 
 [Work Item Planner - SDL Assessment (August 2025)](https://microsoft.visualstudio.com/Family/_compliance/product/4446c4d1-ce1b-1466-31a3-7d75a1baa0b5/assessments/31bcff24-d74b-9373-1701-5c586b35d8a7)
+
