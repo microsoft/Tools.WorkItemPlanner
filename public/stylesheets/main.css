@@ -1,3 +1,131 @@
+/* Custom Select2 Styling */
+.select2-container {
+  max-width: 100%;
+  flex: 1;
+}
+
+.select2-container:not(:first-child) {
+  margin-left: 0.5rem;
+}
+
+/* Fix dropdown alignment for all Select2 dropdowns */
+.select2-dropdown {
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  margin-left: 0 !important;
+  left: 0 !important;
+}
+
+/* Specific fix for dropdowns in flex containers */
+.form-group.mb-3.d-flex .select2-container .select2-dropdown {
+  transform: translateX(0) !important;
+}
+
+.select2-container--default .select2-selection--single {
+  height: calc(1.5em + 0.75rem + 2px);
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 1.5;
+  padding-left: 0;
+  padding-right: 20px;
+  font-size: 1rem;
+  color: #495057;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: calc(1.5em + 0.75rem);
+  right: 0.75rem;
+}
+
+.select2-container--default .select2-results__option {
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.select2-container--default .select2-results__option--highlighted {
+  background-color: #dee2e6 !important;
+  color: #000 !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: #dee2e6 !important;
+  color: #000 !important;
+}
+
+.select2-search--dropdown .select2-search__field {
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  height: calc(1.5em + 0.75rem + 2px);
+}
+
+.select2-dropdown .select2-search {
+  padding: 4px;
+}
+
+.select2-user-option {
+  display: flex;
+  align-items: center;
+}
+
+.select2-user-selection {
+  display: flex;
+  align-items: center;
+}
+
+.select2-user-image {
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+/* Increase dropdown height to show more options */
+.select2-dropdown .select2-results {
+  max-height: 400px !important; /* Increased from default ~200px */
+}
+
+/* Ensure the dropdown shows more options for organization, project, and team dropdowns */
+.select2-dropdown .select2-results__options {
+  max-height: 400px !important; /* Increased from default ~200px */
+  overflow-y: auto;
+}
+
+/* More specific selector to override Select2 defaults */
+.select2-container--default .select2-results > .select2-results__options {
+  max-height: 400px !important;
+}
+
+/* Alternative approach using the dropdown container */
+.select2-dropdown[aria-hidden="false"] .select2-results__options {
+  max-height: 400px !important;
+}
+
+/* Custom dropdown class for larger height */
+.select2-dropdown-large .select2-results__options {
+  max-height: 400px !important;
+  overflow-y: auto;
+}
+
+.select2-dropdown-large .select2-results {
+  max-height: 400px !important;
+}
+
 body {
   font-family: "Segoe UI", Arial, sans-serif;
   background-size: cover;
@@ -65,8 +193,11 @@ form {
 }
 
 .form-control {
-  border-radius: 4px;
-  padding: 10px;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  height: calc(1.5em + 0.75rem + 2px);
 }
 
 .deliverable-item {
@@ -795,6 +926,14 @@ body.plain-text-mode .task-description:focus {
   min-width: 300px; /* Increased minimum width */
 }
 
+/* Specific sizing for the top row dropdowns */
+#organization-select-custom,
+#project-select-custom,
+#team-select-custom {
+  min-width: 200px;
+  flex: 1;
+}
+
 .custom-dropdown.disabled {
   opacity: 1;
   pointer-events: none;
@@ -804,6 +943,7 @@ body.plain-text-mode .task-description:focus {
   background-color: #e9ecef;
   color: #6c757d;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 .custom-dropdown-selected {
@@ -817,6 +957,13 @@ body.plain-text-mode .task-description:focus {
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   width: 100%;
   min-height: 44px; /* Ensure consistent height */
+}
+
+/* Specific styling for dropdowns without user images */
+#organization-select-custom .custom-dropdown-selected,
+#project-select-custom .custom-dropdown-selected,
+#team-select-custom .custom-dropdown-selected {
+  padding-left: 12px;
 }
 
 .custom-dropdown-selected:hover {
@@ -872,7 +1019,7 @@ body.plain-text-mode .task-description:focus {
   border: 1px solid #ced4da;
   border-top: none;
   border-radius: 0 0 4px 4px;
-  max-height: 200px;
+  max-height: 400px; /* Increased from 200px to 400px */
   overflow-y: auto;
   z-index: 1000;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -880,6 +1027,13 @@ body.plain-text-mode .task-description:focus {
   flex-direction: column !important; /* Force vertical stacking of options */
   width: 100%;
   min-width: 300px; /* Increased minimum width to accommodate longer names */
+}
+
+/* Specific height for org/project/team dropdowns to show more options */
+#organization-select-custom .custom-dropdown-options,
+#project-select-custom .custom-dropdown-options,
+#team-select-custom .custom-dropdown-options {
+  max-height: 500px !important; /* Much taller to show many more options */
 }
 
 .custom-dropdown-options[style*="display: none"] {
@@ -904,11 +1058,16 @@ body.plain-text-mode .task-description:focus {
 }
 
 .custom-dropdown-option:hover {
-  background-color: #f8f9fa;
+  background-color: #dee2e6;
 }
 
 .custom-dropdown-option:active {
-  background-color: #e9ecef;
+  background-color: #ced4da;
+}
+
+.custom-dropdown-option.highlighted {
+  background-color: #f8f9fa;
+  color: #495057;
 }
 
 .custom-dropdown-option span {

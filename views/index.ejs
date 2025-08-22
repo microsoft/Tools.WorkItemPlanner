@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="stylesheets/vendor/bootstrap_5.3.0_css.min.css">
   <link rel="stylesheet" href="stylesheets/vendor/jquery_ui_1.13.0_themes.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
   <link rel="stylesheet" type="text/css" href="stylesheets/main.css">
   <link rel="icon" href="images/azure_devops_favicon.png" type="image/x-icon">
 </head>
@@ -16,6 +17,7 @@
   <script src="scripts/vendor/bootstrap_5.3.0.bundle.min.js"></script>
   <script src="scripts/vendor/jquery_3.6.0.min.js"></script>
   <script src="scripts/vendor/jquery-1.13.0-ui.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
   <header>
     <a href="https://dev.azure.com" target="_blank" rel="noopener noreferrer">
@@ -57,13 +59,15 @@
       <hr>
       <small class="form-text text-muted">Choices are curated based on your access</small>
       <div class="form-group mb-3 d-flex">
-        <select class="form-control" id="organization-select">
+        <select class="form-control" id="organization-select" style="flex: 1;">
           <option value="" disabled selected>Select an Organization</option>
         </select>
-        <select class="form-control ms-2" id="project-select" disabled>
+        
+        <select class="form-control ms-2" id="project-select" disabled style="flex: 1;">
           <option value="" disabled selected>Select a Project</option>
         </select>
-        <select class="form-control ms-2" id="team-select" disabled>
+        
+        <select class="form-control ms-2" id="team-select" disabled style="flex: 1;">
           <option value="" disabled selected>Select a Team</option>
         </select>
       </div>
@@ -85,17 +89,7 @@
           <!-- Assignee Input -->
           <div style="flex: 1; display: flex; flex-direction: column;">
             <small class="form-text text-muted">Assignee for the new Work Item(s)</small>
-            <div class="custom-dropdown disabled" id="assigned-to-select-custom">
-              <div class="custom-dropdown-selected" tabindex="0">
-                <img class="dropdown-user-image" src="images/profile_picture_placeholder.jpg" alt="">
-                <span class="dropdown-text">Select an Assignee</span>
-                <i class="fas fa-chevron-down dropdown-arrow"></i>
-              </div>
-              <div class="custom-dropdown-options" style="display: none;">
-              </div>
-            </div>
-            <!-- Hidden select for form validation and value storage -->
-            <select class="form-control" id="assigned-to-select" required disabled style="display: none;">
+            <select class="form-control" id="assigned-to-select" required disabled style="width: 100%;">
               <option value="" disabled selected>Select an Assignee</option>
             </select>
           </div>

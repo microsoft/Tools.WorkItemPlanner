@@ -15,14 +15,188 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Variable to store the selected work item type details for dynamic updates
 let selectedWorkItemTypeName = "Work-Item";
 
-// Helper function to get the assigned-to select element (handles both standard and custom dropdown)
+// Helper function to get the assigned-to select element
 function getAssignedToSelect() {
-  const $customDropdown = $("#assigned-to-select-custom");
-  if ($customDropdown.length > 0) {
-    // Return the hidden select element that follows the custom dropdown
-    return $customDropdown.next('select');
-  }
   return $("#assigned-to-select");
+}
+
+// Helper function to setup custom dropdown for organization, project, and team
+function setupStandardCustomDropdown($customDropdown, $hiddenSelect) {
+  if (!$customDropdown.length || !$hiddenSelect.length) return;
+  
+  const $selected = $customDropdown.find('.custom-dropdown-selected');
+  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
+  const $arrow = $customDropdown.find('.dropdown-arrow');
+  let highlightedIndex = -1;
+  let searchBuffer = '';
+  let searchTimeout = null;
+  
+  // Click handler for the selected area
+  $selected.off('click').on('click', function(e) {
+    e.stopPropagation();
+    if ($customDropdown.hasClass('disabled')) return;
+    
+    const isOpen = $optionsContainer.is(':visible');
+    
+    // Close all other dropdowns and clear their highlights
+    $('.custom-dropdown-options').hide();
+    $('.dropdown-arrow').removeClass('rotated');
+    $('.custom-dropdown-option').removeClass('highlighted');
+    
+    if (!isOpen) {
+      $optionsContainer.show();
+      $arrow.addClass('rotated');
+      highlightedIndex = -1;
+      $selected.focus(); // Ensure focus for keyboard navigation
+    }
+  });
+  
+  // Keyboard navigation
+  $selected.off('keydown').on('keydown', function(e) {
+    if ($customDropdown.hasClass('disabled')) return;
+    
+    const $options = $optionsContainer.find('.custom-dropdown-option');
+    const isOpen = $optionsContainer.is(':visible');
+    
+    switch(e.key) {
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (!isOpen) {
+          $optionsContainer.show();
+          $arrow.addClass('rotated');
+          highlightedIndex = -1;
+        } else if (highlightedIndex >= 0) {
+          $options.eq(highlightedIndex).click();
+        }
+        break;
+        
+        case 'Escape':
+        e.preventDefault();
+        $optionsContainer.hide();
+        $arrow.removeClass('rotated');
+        $optionsContainer.find('.custom-dropdown-option').removeClass('highlighted');
+        highlightedIndex = -1;
+        searchBuffer = '';
+        break;      case 'ArrowDown':
+        e.preventDefault();
+        if (!isOpen) {
+          $optionsContainer.show();
+          $arrow.addClass('rotated');
+          highlightedIndex = 0;
+        } else {
+          highlightedIndex = Math.min(highlightedIndex + 1, $options.length - 1);
+        }
+        updateHighlight($options, highlightedIndex, $optionsContainer);
+        break;
+        
+      case 'ArrowUp':
+        e.preventDefault();
+        if (isOpen) {
+          highlightedIndex = Math.max(highlightedIndex - 1, 0);
+          updateHighlight($options, highlightedIndex, $optionsContainer);
+        }
+        break;
+        
+      default:
+        // Type-ahead search (works whether dropdown is open or closed)
+        if (e.key.length === 1 && /[a-zA-Z0-9\s]/.test(e.key)) {
+          e.preventDefault();
+          
+          if (!isOpen) {
+            $optionsContainer.show();
+            $arrow.addClass('rotated');
+          }
+          
+          // Build search buffer for multi-character search
+          searchBuffer += e.key.toLowerCase();
+          
+          // Clear previous timeout
+          if (searchTimeout) {
+            clearTimeout(searchTimeout);
+          }
+          
+          // Find matching option
+          const matchIndex = findOptionByText($options, searchBuffer, 0);
+          if (matchIndex >= 0) {
+            highlightedIndex = matchIndex;
+            updateHighlight($options, highlightedIndex, $optionsContainer);
+          }
+          
+          // Clear search buffer after delay
+          searchTimeout = setTimeout(() => {
+            searchBuffer = '';
+          }, 1000);
+        }
+        break;
+    }
+  });
+  
+  // Option click handler
+  $optionsContainer.off('click', '.custom-dropdown-option').on('click', '.custom-dropdown-option', function(e) {
+    e.stopPropagation();
+    const $option = $(this);
+    const value = $option.data('value');
+    const text = $option.text();
+    
+    // Update hidden select
+    $hiddenSelect.val(value);
+    
+    // Update display
+    $selected.find('.dropdown-text').text(text);
+    
+    // Close dropdown
+    $optionsContainer.hide();
+    $arrow.removeClass('rotated');
+    $optionsContainer.find('.custom-dropdown-option').removeClass('highlighted');
+    highlightedIndex = -1;
+    searchBuffer = '';
+    
+    // Trigger change event on hidden select
+    $hiddenSelect.trigger('change');
+  });
+  
+  // Close dropdown when clicking outside
+  $(document).on('click', function() {
+    $optionsContainer.hide();
+    $arrow.removeClass('rotated');
+    $optionsContainer.find('.custom-dropdown-option').removeClass('highlighted');
+    highlightedIndex = -1;
+    searchBuffer = '';
+  });
+  
+  // Helper function to update highlighted option
+  function updateHighlight($options, index, $container) {
+    $options.removeClass('highlighted');
+    if (index >= 0 && index < $options.length) {
+      const $highlighted = $options.eq(index);
+      $highlighted.addClass('highlighted');
+      
+      // Scroll highlighted option into view
+      const optionTop = $highlighted.position().top;
+      const optionHeight = $highlighted.outerHeight();
+      const containerHeight = $container.height();
+      const scrollTop = $container.scrollTop();
+      
+      if (optionTop < 0) {
+        $container.scrollTop(scrollTop + optionTop);
+      } else if (optionTop + optionHeight > containerHeight) {
+        $container.scrollTop(scrollTop + optionTop + optionHeight - containerHeight);
+      }
+    }
+  }
+  
+  // Helper function to find option by starting text
+  function findOptionByText($options, searchText, startIndex = 0) {
+    for (let i = 0; i < $options.length; i++) {
+      const index = (startIndex + i) % $options.length;
+      const optionText = $options.eq(index).text().toLowerCase().trim();
+      if (optionText.startsWith(searchText)) {
+        return index;
+      }
+    }
+    return -1;
+  }
 }
 
 const trackProgress = async (message, fn) => {
@@ -86,8 +260,8 @@ async function onSuccessLogin() {
     tolerance: "pointer", // Drag only when pointer is inside the deliverable
   });
 
-  // Initialize custom dropdown event handlers
-  initializeCustomDropdownEvents();
+  // Initialize Select2 dropdowns
+  initializeSelect2Dropdowns();
 
   hideLoadingIndicator();
 }
@@ -945,26 +1119,37 @@ async function populateOrganizationsDropdown() {
 
   //Populate the dropdown with fetched organizations
   const organizationSelect = document.getElementById("organization-select");
+  const $customDropdown = $("#organization-select-custom");
+  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
 
   // Clear existing options
-  // organizationSelect.innerHTML = "";
+  $optionsContainer.empty();
+  while (organizationSelect.options.length > 1) {
+    organizationSelect.remove(1);
+  }
 
   // Sort organizations in alphabetical order
   organizations.sort((a, b) => (a.accountName > b.accountName ? 1 : -1));
 
   // Add fetched organizations as options
   organizations.forEach((organization) => {
+    // Add to hidden select
     const option = document.createElement("option");
     option.value = organization.accountName;
     option.textContent = organization.accountName;
-
-    // // Set "microsoft" as selected if found
-    // if (organization.accountName.toLowerCase() === "microsoft") {
-    //   option.selected = true;
-    // }
-
     organizationSelect.appendChild(option);
+    
+    // Add to custom dropdown
+    const $option = $(`
+      <div class="custom-dropdown-option" data-value="${organization.accountName}">
+        <span>${organization.accountName}</span>
+      </div>
+    `);
+    $optionsContainer.append($option);
   });
+  
+  // Setup custom dropdown events
+  setupStandardCustomDropdown($customDropdown, $(organizationSelect));
 }
 
 
@@ -994,6 +1179,7 @@ async function fetchProjectsForOrganization(organization) {
 // Function to clear project-select dropdown
 function clearProjectSelect() {
   const projectSelect = document.getElementById("project-select");
+  const $customDropdown = $("#project-select-custom");
 
   // Remove all options except the first one
   while (projectSelect.options.length > 1) {
@@ -1002,6 +1188,13 @@ function clearProjectSelect() {
 
   projectSelect.selectedIndex = 0;
   projectSelect.disabled = true;
+  
+  // Reset custom dropdown
+  $customDropdown.addClass('disabled');
+  $customDropdown.find('.dropdown-text').text('Select a Project');
+  $customDropdown.find('.custom-dropdown-options').empty();
+  $customDropdown.find('.custom-dropdown-option').removeClass('highlighted');
+  $customDropdown.find('.custom-dropdown-selected').attr('tabindex', '-1');
 }
 
 // Function to populate projects into project-select
@@ -1022,24 +1215,36 @@ async function populateProjectsDropdown() {
   //sort projects in alphabetical order
   projects.sort((a, b) => (a.name > b.name ? 1 : -1));
 
-  // //Check if the OS project exists
-  // const osProject = projects.find((project) => project.name === "OS");
-
   // Add fetched projects as options
   const projectSelect = document.getElementById("project-select");
+  const $customDropdown = $("#project-select-custom");
+  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
+  
+  // Clear custom dropdown options
+  $optionsContainer.empty();
+  
   projects.forEach((project) => {
+    // Add to hidden select
     const option = document.createElement("option");
     option.value = project.name;
     option.textContent = project.name;
-
-    // Set "OS" project as selected if found
-    // if (osProject && project.name === osProject.name) {
-    //   option.selected = true;
-    // }
     projectSelect.appendChild(option);
+    
+    // Add to custom dropdown
+    const $option = $(`
+      <div class="custom-dropdown-option" data-value="${project.name}">
+        <span>${project.name}</span>
+      </div>
+    `);
+    $optionsContainer.append($option);
   });
 
   projectSelect.disabled = false;
+  $customDropdown.removeClass('disabled');
+  $customDropdown.find('.custom-dropdown-selected').attr('tabindex', '0');
+  
+  // Setup custom dropdown events
+  setupStandardCustomDropdown($customDropdown, $(projectSelect));
 }
 
 // Function to construct Auth Headers for Azure DevOps
@@ -1264,22 +1469,41 @@ function populateTeamDropdown(teams) {
   } else {
     clearTeamDropdown();
     const teamSelect = document.getElementById("team-select");
+    const $customDropdown = $("#team-select-custom");
+    const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
+    
+    // Clear custom dropdown options
+    $optionsContainer.empty();
 
     teams.forEach((team) => {
-      // Create option element using plain JavaScript
+      // Add to hidden select
       const option = document.createElement("option");
       option.value = team.id;
       option.textContent = team.name;
       teamSelect.appendChild(option);
+      
+      // Add to custom dropdown
+      const $option = $(`
+        <div class="custom-dropdown-option" data-value="${team.id}">
+          <span>${team.name}</span>
+        </div>
+      `);
+      $optionsContainer.append($option);
     });
 
     teamSelect.disabled = false;
+    $customDropdown.removeClass('disabled');
+    $customDropdown.find('.custom-dropdown-selected').attr('tabindex', '0');
+    
+    // Setup custom dropdown events
+    setupStandardCustomDropdown($customDropdown, $(teamSelect));
   }
 }
 
 // Function to clear team-select dropdown
 function clearTeamDropdown() {
   const teamSelect = document.getElementById("team-select");
+  const $customDropdown = $("#team-select-custom");
 
   // Remove all options except the first one
   while (teamSelect.options.length > 1) {
@@ -1288,6 +1512,13 @@ function clearTeamDropdown() {
 
   teamSelect.selectedIndex = 0;
   teamSelect.disabled = true;
+  
+  // Reset custom dropdown
+  $customDropdown.addClass('disabled');
+  $customDropdown.find('.dropdown-text').text('Select a Team');
+  $customDropdown.find('.custom-dropdown-options').empty();
+  $customDropdown.find('.custom-dropdown-option').removeClass('highlighted');
+  $customDropdown.find('.custom-dropdown-selected').attr('tabindex', '-1');
 }
 
 // Function to fetch iterations for the selected team from Azure DevOps using AJAX
@@ -1395,26 +1626,20 @@ async function fetchUsersInTeam() {
 
 // Function to clear assigned-to-select dropdown
 function clearAssignedToDropdown() {
-  const $customDropdown = $("#assigned-to-select-custom");
-  const $hiddenSelect = $("#assigned-to-select");
+  const $assignedToSelect = $("#assigned-to-select");
   
-  if ($customDropdown.length > 0) {
-    // Reset custom dropdown to initial state
-    $customDropdown.find('.dropdown-user-image').attr('src', 'images/profile_picture_placeholder.jpg');
-    $customDropdown.find('.dropdown-text').text('Select an Assignee');
-    $customDropdown.find('.custom-dropdown-options').empty();
-    $customDropdown.removeClass('is-invalid');
-    $customDropdown.addClass('disabled');
-  }
-  
-  if ($hiddenSelect.length > 0) {
-    // Clear the hidden select
-    while ($hiddenSelect[0].options.length > 1) {
-      $hiddenSelect[0].remove(1);
-    }
-    $hiddenSelect[0].selectedIndex = 0;
-    $hiddenSelect[0].disabled = true;
-    $hiddenSelect.removeClass('is-invalid');
+  if ($assignedToSelect.length > 0) {
+    // Clear all options except the first one (placeholder)
+    $assignedToSelect.find('option:not(:first)').remove();
+    
+    // Reset to placeholder option
+    $assignedToSelect.val('').trigger('change');
+    
+    // Disable the dropdown
+    $assignedToSelect.prop('disabled', true);
+    
+    // Remove validation styling
+    $assignedToSelect.removeClass('is-invalid');
   }
 }
 
@@ -1422,36 +1647,19 @@ function clearAssignedToDropdown() {
 function populateAssignedToDropdown(users) {
   clearAssignedToDropdown();
   
-  // Get the elements
-  const $customDropdown = $("#assigned-to-select-custom");
-  const $hiddenSelect = $("#assigned-to-select");
-  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
-  const $selected = $customDropdown.find('.custom-dropdown-selected');
+  const $assignedToSelect = $("#assigned-to-select");
   
-  if (!$customDropdown.length || !$hiddenSelect.length) {
-    console.error("Assigned to dropdown elements not found");
+  if (!$assignedToSelect.length) {
+    console.error("Assigned to dropdown element not found");
     return;
   }
-
-  // Clear existing options
-  $optionsContainer.empty();
 
   // Add the current user as the default option
   if (userDisplayName && userEmailId) {
     const currentUserOption = new Option(userDisplayName, userEmailId, true, true);
-    $hiddenSelect.append(currentUserOption);
-    
-    // Set as selected in custom dropdown
-    const currentUserImage = document.querySelector(".user-profile-image");
-    let avatarUrl = 'images/profile_picture_placeholder.jpg';
-    if (currentUserImage && currentUserImage.src && !currentUserImage.src.includes('placeholder')) {
-      avatarUrl = currentUserImage.src;
-    } else {
-      avatarUrl = createAvatarCanvas(userDisplayName);
-    }
-    
-    $selected.find('.dropdown-user-image').attr('src', avatarUrl);
-    $selected.find('.dropdown-text').text(userDisplayName);
+    $(currentUserOption).attr('data-user-id', 'current-user');
+    $(currentUserOption).attr('data-display-name', userDisplayName);
+    $assignedToSelect.append(currentUserOption);
   }
 
   if (users && users.length > 0) {
@@ -1473,70 +1681,127 @@ function populateAssignedToDropdown(users) {
     // Sort users by displayName
     validUsers.sort((a, b) => a.identity.displayName.localeCompare(b.identity.displayName));
 
-    // Populate both dropdowns with the sorted and valid users
+    // Populate dropdown with the sorted and valid users
     for (const user of validUsers) {
       const displayName = user.identity.displayName;
       const emailAddress = user.identity.uniqueName;
       const userId = user.identity.id;
       
-      // Add to hidden select for form validation
+      // Add to select with data attributes for avatar rendering
       const option = new Option(displayName, emailAddress);
-      option.setAttribute('data-user-id', userId);
-      option.setAttribute('data-display-name', displayName);
-      $hiddenSelect.append(option);
-      
-      // Add to custom dropdown with avatar
-      const initialAvatarUrl = createAvatarCanvas(displayName);
-      const $option = $(`
-        <div class="custom-dropdown-option" data-value="${emailAddress}">
-          <img class="dropdown-user-image" src="${initialAvatarUrl}" alt="${displayName}" data-user-id="${userId}" data-display-name="${displayName}">
-          <span>${displayName}</span>
-        </div>
-      `);
-      
-      $optionsContainer.append($option);
-      
-      // Load real avatar asynchronously (non-blocking)
-      loadUserAvatarAsync(userId, displayName, $option.find('.dropdown-user-image'), $selected, emailAddress);
+      $(option).attr('data-user-id', userId);
+      $(option).attr('data-display-name', displayName);
+      $assignedToSelect.append(option);
     }
 
     console.log(`Populated dropdown with ${validUsers.length} valid users out of ${users.length} total members`);
   }
 
-  $hiddenSelect.prop("disabled", false);
-  $customDropdown.removeClass('disabled');
+  // Enable the dropdown and trigger Select2 update
+  $assignedToSelect.prop("disabled", false);
+  $assignedToSelect.trigger('change');
 }
 
-// Function to initialize custom dropdown event handlers
-function initializeCustomDropdownEvents() {
-  const $customDropdown = $("#assigned-to-select-custom");
-  const $hiddenSelect = $("#assigned-to-select");
+// Function to initialize Select2 dropdowns
+function initializeSelect2Dropdowns() {
+  // Initialize organization dropdown
+  $('#organization-select').select2({
+    placeholder: 'Select an Organization',
+    allowClear: false,
+    width: '100%',
+    dropdownAutoWidth: true,
+    closeOnSelect: true,
+    minimumResultsForSearch: 0, // Always show search box
+    dropdownCssClass: 'select2-dropdown-large'
+  });
   
-  if ($customDropdown.length && $hiddenSelect.length) {
-    setupCustomDropdownEvents($customDropdown, $hiddenSelect, true);
-  }
+  // Initialize project dropdown
+  $('#project-select').select2({
+    placeholder: 'Select a Project',
+    allowClear: false,
+    width: '100%',
+    dropdownAutoWidth: true,
+    closeOnSelect: true,
+    minimumResultsForSearch: 0, // Always show search box
+    dropdownCssClass: 'select2-dropdown-large'
+  });
+  
+  // Initialize team dropdown
+  $('#team-select').select2({
+    placeholder: 'Select a Team',
+    allowClear: false,
+    width: '100%',
+    dropdownAutoWidth: true,
+    closeOnSelect: true,
+    minimumResultsForSearch: 0, // Always show search box
+    dropdownCssClass: 'select2-dropdown-large'
+  });
+  
+  // Initialize assignee dropdown with avatar support
+  $('#assigned-to-select').select2({
+    placeholder: 'Select an Assignee',
+    allowClear: false,
+    width: '100%',
+    closeOnSelect: true,
+    templateResult: formatUserOption,
+    templateSelection: formatUserSelection,
+    escapeMarkup: function(markup) { return markup; },
+    minimumResultsForSearch: 0, // Always show search box
+    dropdownCssClass: 'select2-dropdown-large'
+  });
 }
 
-// Function to load user avatar asynchronously without blocking the UI
-async function loadUserAvatarAsync(userId, displayName, $img, $selected, value) {
-  try {
-    const avatarUrl = await fetchUserAvatar(userId, displayName);
-    
-    // Check if the elements still exist in the DOM before updating
-    if ($img.length && $img.closest('.custom-dropdown').length) {
-      // Update the option image
-      $img.attr('src', avatarUrl);
-      
-      // If this is the currently selected option, update the selected display too
-      const $hiddenSelect = $selected.closest('.custom-dropdown').next('select');
-      if ($hiddenSelect.length && $hiddenSelect.val() === value) {
-        $selected.find('.dropdown-user-image').attr('src', avatarUrl);
-      }
-    }
-  } catch (error) {
-    console.warn(`Failed to load avatar for ${displayName}:`, error);
-    // Keep the generated avatar that's already there
+// Format user options with avatars
+function formatUserOption(user) {
+  if (!user.id) {
+    return user.text;
   }
+  
+  const $user = $(user.element);
+  const userId = $user.data('user-id');
+  const displayName = $user.data('display-name') || user.text;
+  
+  let avatarUrl = 'images/profile_picture_placeholder.jpg';
+  if (userId) {
+    avatarUrl = createAvatarCanvas(displayName);
+  }
+  
+  return $(`
+    <div class="select2-user-option">
+      <img class="select2-user-image" src="${avatarUrl}" alt="${displayName}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;">
+      <span>${displayName}</span>
+    </div>
+  `);
+}
+
+// Format selected user with avatar
+function formatUserSelection(user) {
+  if (!user.id) {
+    return user.text;
+  }
+  
+  const $user = $(user.element);
+  const userId = $user.data('user-id');
+  const displayName = $user.data('display-name') || user.text;
+  
+  let avatarUrl = 'images/profile_picture_placeholder.jpg';
+  if (userId && userId !== 'current-user') {
+    avatarUrl = createAvatarCanvas(displayName);
+    
+    // Load real avatar asynchronously and update after rendering
+    fetchUserAvatar(userId, displayName).then((realAvatarUrl) => {
+      $('.select2-selection__rendered .select2-user-image').attr('src', realAvatarUrl);
+    }).catch(() => {
+      // Keep the generated avatar if fetch fails
+    });
+  }
+  
+  return $(`
+    <div class="select2-user-selection">
+      <img class="select2-user-image" src="${avatarUrl}" alt="${displayName}" style="width: 20px; height: 20px; border-radius: 50%; margin-right: 6px;">
+      <span>${displayName}</span>
+    </div>
+  `);
 }
 
 // Function to setup event handlers for custom dropdown
@@ -1743,26 +2008,70 @@ function generateAvatarColor(displayName) {
 
 // Function to create an avatar canvas element
 function createAvatarCanvas(displayName, size = 24) {
+  // Use higher DPI for sharper rendering
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  const scaledSize = size * devicePixelRatio;
+  
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   
-  canvas.width = size;
-  canvas.height = size;
+  // Set actual canvas size (scaled for high DPI)
+  canvas.width = scaledSize;
+  canvas.height = scaledSize;
   
-  // Fill background
+  // Set display size (what the browser will show)
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  
+  // Scale the context to match device pixel ratio
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  
+  // Enable anti-aliasing and better text rendering
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.textRenderingOptimization = 'optimizeQuality';
+  
+  // Fill background with rounded corners for better appearance
+  const radius = size * 0.1; // 10% radius for slight rounding
   ctx.fillStyle = generateAvatarColor(displayName);
-  ctx.fillRect(0, 0, size, size);
+  ctx.beginPath();
   
-  // Add text
+  // Use roundRect if available, otherwise fall back to regular rect
+  if (ctx.roundRect) {
+    ctx.roundRect(0, 0, size, size, radius);
+  } else {
+    // Fallback: create rounded rectangle manually
+    ctx.moveTo(radius, 0);
+    ctx.lineTo(size - radius, 0);
+    ctx.quadraticCurveTo(size, 0, size, radius);
+    ctx.lineTo(size, size - radius);
+    ctx.quadraticCurveTo(size, size, size - radius, size);
+    ctx.lineTo(radius, size);
+    ctx.quadraticCurveTo(0, size, 0, size - radius);
+    ctx.lineTo(0, radius);
+    ctx.quadraticCurveTo(0, 0, radius, 0);
+    ctx.closePath();
+  }
+  ctx.fill();
+  
+  // Add text with improved font rendering
   ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${Math.floor(size * 0.4)}px Arial, sans-serif`;
+  // Use a slightly larger font size for better clarity
+  const fontSize = Math.max(Math.floor(size * 0.45), 10); // Minimum 10px font
+  ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  
+  // Add subtle text shadow for better readability
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 1;
+  ctx.shadowBlur = 1;
   
   const initials = generateAvatarInitials(displayName);
   ctx.fillText(initials, size / 2, size / 2);
   
-  return canvas.toDataURL();
+  return canvas.toDataURL('image/png');
 }
 
 // Function to fetch user avatar from Azure DevOps (with fallback to generated avatar)
@@ -1788,7 +2097,7 @@ async function fetchUserAvatar(userId, displayName) {
       // Set a timeout to fallback if loading takes too long
       setTimeout(() => {
         resolve(createAvatarCanvas(displayName));
-      }, 5000);
+      }, 8000);
     });
     
   } catch (error) {

@@ -9,6 +9,51 @@ $(document).ready(function () {
   }
 });
 
+// Select2 specific event handlers for dropdown closing behavior
+$(document).ready(function() {
+  // Force close dropdown on selection for all dropdowns
+  $('#organization-select, #project-select, #team-select, #assigned-to-select').on('select2:select', function() {
+    $(this).select2('close');
+  });
+  
+  // Additional explicit close handlers for problematic dropdowns
+  $('#project-select').on('select2:select', function(e) {
+    e.preventDefault();
+    $(this).select2('close');
+  });
+  
+  $('#team-select').on('select2:select', function(e) {
+    e.preventDefault();
+    $(this).select2('close');
+  });
+  
+  // Auto-focus search input when Select2 dropdowns are opened
+  $('#organization-select, #project-select, #team-select, #assigned-to-select').on('select2:open', function(e) {
+    const dropdownId = $(this).attr('id');
+    
+    // Get the specific container for this select2 instance
+    const containerId = $(this).data('select2').$container.attr('id');
+    
+    // Find and focus the search field
+    const focusSearch = () => {
+      // Find the search field in the opened dropdown
+      const searchField = $('.select2-container--open .select2-dropdown .select2-search__field');
+      
+      if (searchField.length > 0) {
+        try {
+          searchField[0].focus();
+          searchField[0].select(); // Select any existing text
+        } catch (error) {
+          console.log('Error focusing search field:', error);
+        }
+      }
+    };
+    
+    // Single timeout should be sufficient since focus is working
+    setTimeout(focusSearch, 100);
+  });
+});
+
 // Event listener for description toggle buttons
 $(document).on("click", ".description-toggle-btn", function (e) {
   e.preventDefault();
@@ -424,6 +469,8 @@ $(document).on("blur", "#feature-id", function () {
 
 // Event listener for when the Organization dropdown value changes
 $("#organization-select").on("change", async function () {
+  // Close dropdown explicitly after change
+  $(this).select2('close');
   const selectedOrganization = $(this).val();
 
   if (selectedOrganization) {
@@ -476,6 +523,8 @@ $("#organization-select").on("change", async function () {
 
 // Event listener for when the Project dropdown value changes
 $("#project-select").on("change", function () {
+  // Close dropdown explicitly after change
+  $(this).select2('close');
   const selectedOrganization = $("#organization-select").val();
   const selectedProject = $(this).val();
   if (selectedOrganization && selectedProject) {
@@ -562,6 +611,8 @@ $(document).on("change", "#work-item-type-select", function () {
 
 // Event listener for when the Team dropdown value changes
 $("#team-select").on("change", function () {
+  // Close dropdown explicitly after change
+  $(this).select2('close');
   const selectedTeam = $(this).val();
   if (selectedTeam) {
     showLoadingIndicator("Fetching Team Configuration...");
