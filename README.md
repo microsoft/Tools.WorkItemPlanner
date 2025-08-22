@@ -47,6 +47,36 @@ To run the application locally, you'll need to have Node.js and npm (Node Packag
 1. Open your web browser and visit: `http://localhost:3000`
 1. Note that you may have to enable CORS on your browser when running locally. There are a good number of Edge plugins to help you with this.
 
+## Feature Configuration
+
+### Rich Text Editor (State: Beta)
+
+The application includes a rich text editor for work item and task descriptions. This feature can be controlled via a feature flag:
+
+**Location**: `public/scripts/richTextEditor.js`
+```javascript
+// Feature flag to enable/disable rich text editor
+window.ENABLE_RICH_TEXT_EDITOR = false;  // Set to true to enable rich text
+```
+
+**When `ENABLE_RICH_TEXT_EDITOR = false` (default):**
+- Description fields use plain text input
+- Rich text toolbar is hidden via CSS
+- All formatting features are disabled
+- Content is stored and retrieved as plain text
+
+**When `ENABLE_RICH_TEXT_EDITOR = true`:**
+- Description fields support rich text formatting
+- Toolbar provides bold, italic, underline, and other formatting options
+- Support for images via drag-and-drop or clipboard paste
+- Content is stored as HTML
+
+**Implementation Details:**
+- All rich text code is preserved but conditionally executed
+- The `getRichTextContent()` and `setRichTextContent()` functions automatically handle both modes
+- CSS class `plain-text-mode` is added to `<body>` when rich text is disabled
+- No code deletion - feature can be easily re-enabled by changing the flag
+
 ## Usage
 
 1. Fill out the required fields in the form, providing Organization, Project, Feature Id, Area Path, Iteration & Work Item(s).
@@ -193,10 +223,11 @@ Contributions are welcome! If you find any bugs or have suggestions for improvem
 
 ## Future Roadmap
 
-- Implement Single Sign on - COMPLETED
-- Support for custom templates - COMPLETED
-- Track Telemetry - COMPLETED
-- Support Work Item Description (Rich Text) - COMPLETED
+- Implement Single Sign on - Done
+- Support for custom templates - Done
+- Track Telemetry - Done
+- Support Work Item Description (Plain Text) - Done
+- Support Work Item Description (Rich Text) - Started (alpha)
 
 ## SDL Assessment
 

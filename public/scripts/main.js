@@ -1143,10 +1143,10 @@ function updateDeliverable($deliverableItem, data) {
   
   // Set rich text content
   const $descriptionEditor = $deliverableItem.find(".deliverable-description");
-  if (window.RichTextEditor) {
+  if (window.RichTextEditor && window.ENABLE_RICH_TEXT_EDITOR) {
     window.RichTextEditor.setRichTextContent($descriptionEditor, window.RichTextEditor.convertPlainTextToHtml(data.description || ""));
   } else {
-    $descriptionEditor.html(data.description || "");
+    $descriptionEditor.text(data.description || "");
   }
 
   // Expand description section if there's content
@@ -1170,10 +1170,10 @@ function updateTask($taskItem, data) {
   
   // Set rich text content
   const $descriptionEditor = $taskItem.find(".task-description");
-  if (window.RichTextEditor) {
+  if (window.RichTextEditor && window.ENABLE_RICH_TEXT_EDITOR) {
     window.RichTextEditor.setRichTextContent($descriptionEditor, window.RichTextEditor.convertPlainTextToHtml(data.description || ""));
   } else {
-    $descriptionEditor.html(data.description || "");
+    $descriptionEditor.text(data.description || "");
   }
 
   // Expand description section if there's content

@@ -2,11 +2,26 @@
  * Rich Text Editor functionality for task and deliverable descriptions
  */
 
+// Feature flag to enable/disable rich text editor
+window.ENABLE_RICH_TEXT_EDITOR = false;
+
 $(document).ready(function() {
-  initializeRichTextEditors();
+  // Set body class based on feature flag
+  if (!window.ENABLE_RICH_TEXT_EDITOR) {
+    document.body.classList.add('plain-text-mode');
+  }
+  
+  if (window.ENABLE_RICH_TEXT_EDITOR) {
+    initializeRichTextEditors();
+  }
 });
 
 function initializeRichTextEditors() {
+  // Skip initialization if rich text editor is disabled
+  if (!window.ENABLE_RICH_TEXT_EDITOR) {
+    return;
+  }
+  
   // Handle toolbar button clicks
   $(document).on('click', '.toolbar-btn', function(e) {
     e.preventDefault();
@@ -196,6 +211,11 @@ function updateToolbarButtonStates(toolbar) {
 // Helper functions for getting and setting rich text content
 function getRichTextContent(element) {
   if (element && element.length > 0) {
+    if (!window.ENABLE_RICH_TEXT_EDITOR) {
+      // For plain text mode, return the text content
+      return element.text().trim();
+    }
+    
     const content = element.html().trim();
     // Return empty string if only contains placeholder or whitespace
     if (content === '' || content === '<br>' || content === '<div><br></div>') {
@@ -208,6 +228,12 @@ function getRichTextContent(element) {
 
 function setRichTextContent(element, content) {
   if (element && element.length > 0) {
+    if (!window.ENABLE_RICH_TEXT_EDITOR) {
+      // For plain text mode, set text content
+      element.text(content || '');
+      return;
+    }
+    
     if (content && content.trim() !== '') {
       element.html(content);
     } else {
