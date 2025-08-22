@@ -15,6 +15,16 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Variable to store the selected work item type details for dynamic updates
 let selectedWorkItemTypeName = "Work-Item";
 
+// Helper function to get the assigned-to select element (handles both standard and custom dropdown)
+function getAssignedToSelect() {
+  const $customDropdown = $("#assigned-to-select-custom");
+  if ($customDropdown.length > 0) {
+    // Return the hidden select element that follows the custom dropdown
+    return $customDropdown.next('select');
+  }
+  return $("#assigned-to-select");
+}
+
 const trackProgress = async (message, fn) => {
   showLoadingIndicator(message);
   return fn();
@@ -150,7 +160,8 @@ function validateForm() {
   const featureId = $("#feature-id").val();
   const project = $("#project-select").val();
   const team = $("#team-select").val();
-  const assignedTo = $("#assigned-to-select").val();
+  const $assignedToSelect = getAssignedToSelect();
+  const assignedTo = $assignedToSelect.val();
   const workitemSelect = $("#work-item-type-select").val();
 
   const areaPath = $("#area-path").val();
@@ -178,7 +189,7 @@ function validateForm() {
   }
 
   if (!assignedTo) {
-    $("#assigned-to-select").addClass("is-invalid");
+    $assignedToSelect.addClass("is-invalid");
     isValid = false;
     showErrorPopup(
       "Please select a user to assign the work items. If the choices are empty, it implies that you do not access to assign Work Item(s)."
@@ -501,7 +512,7 @@ async function createDeliverablesAndTasks(data) {
     const areaPath = $("#area-path").val();
     const iteration = $("#iteration").val();
     const featureIdVal = $("#feature-id").val();
-    const selectedUserEmail = $("#assigned-to-select").val();
+    const selectedUserEmail = getAssignedToSelect().val();
 
     const _azureDevOpsApiBaseUrl = "https://dev.azure.com/" + organization + "/" + project;
     let currentCall = 0;
@@ -1381,15 +1392,36 @@ async function fetchUsersInTeam() {
 
 // Function to clear assigned-to-select dropdown
 function clearAssignedToDropdown() {
-  const assignedToSelect = document.getElementById("assigned-to-select");
-
-  // Remove all options except the first one
-  while (assignedToSelect.options.length > 1) {
-    assignedToSelect.remove(1);
+  // Check if custom dropdown exists
+  const $customDropdown = $("#assigned-to-select-custom");
+  if ($customDropdown.length > 0) {
+    // Reset custom dropdown
+    $customDropdown.find('.dropdown-user-image').attr('src', 'images/profile_picture_placeholder.jpg');
+    $customDropdown.find('.dropdown-text').text('Select an Assignee');
+    $customDropdown.find('.custom-dropdown-options').empty();
+    $customDropdown.removeClass('is-invalid');
+    
+    // Find and clear the hidden select
+    const $hiddenSelect = $customDropdown.next('select');
+    if ($hiddenSelect.length > 0) {
+      while ($hiddenSelect[0].options.length > 1) {
+        $hiddenSelect[0].remove(1);
+      }
+      $hiddenSelect[0].selectedIndex = 0;
+      $hiddenSelect[0].disabled = true;
+    }
+  } else {
+    // Handle standard select dropdown
+    const assignedToSelect = document.getElementById("assigned-to-select");
+    if (assignedToSelect) {
+      // Remove all options except the first one
+      while (assignedToSelect.options.length > 1) {
+        assignedToSelect.remove(1);
+      }
+      assignedToSelect.selectedIndex = 0;
+      assignedToSelect.disabled = true;
+    }
   }
-
-  assignedToSelect.selectedIndex = 0;
-  assignedToSelect.disabled = true;
 }
 
 // Function to populate the "Assigned To" dropdown
@@ -1399,7 +1431,8 @@ function populateAssignedToDropdown(users) {
 
   // Add the current user as the default option
   if (userDisplayName && userEmailId) {
-    $assignedToDropdown.append(new Option(userDisplayName, userEmailId, true, true));
+    const currentUserOption = new Option(userDisplayName, userEmailId, true, true);
+    $assignedToDropdown.append(currentUserOption);
   }
 
   if (users && users.length > 0) {
@@ -1422,16 +1455,202 @@ function populateAssignedToDropdown(users) {
     validUsers.sort((a, b) => a.identity.displayName.localeCompare(b.identity.displayName));
 
     // Populate dropdown with the sorted and valid users
-    validUsers.forEach((user) => {
+    for (const user of validUsers) {
       const displayName = user.identity.displayName;
       const emailAddress = user.identity.uniqueName;
-      $assignedToDropdown.append(new Option(displayName, emailAddress));
-    });
+      const userId = user.identity.id;
+      
+      // Create option with data attributes for profile image
+      const option = new Option(displayName, emailAddress);
+      option.setAttribute('data-user-id', userId);
+      option.setAttribute('data-display-name', displayName);
+      $assignedToDropdown.append(option);
+    }
 
     console.log(`Populated dropdown with ${validUsers.length} valid users out of ${users.length} total members`);
+    
+    // Convert to custom dropdown with profile pictures (non-blocking)
+    convertToCustomDropdown($assignedToDropdown, users);
   }
 
   $assignedToDropdown.prop("disabled", false); // Enables the dropdown
+}
+
+// Function to convert standard select to custom dropdown with profile pictures
+function convertToCustomDropdown($selectElement, users) {
+  const selectId = $selectElement.attr('id');
+  const isRequired = $selectElement.attr('required') !== undefined;
+  const isDisabled = $selectElement.prop('disabled');
+  
+  // Create custom dropdown structure
+  const $customDropdown = $(`
+    <div class="custom-dropdown" id="${selectId}-custom">
+      <div class="custom-dropdown-selected" tabindex="0">
+        <img class="dropdown-user-image" src="images/profile_picture_placeholder.jpg" alt="">
+        <span class="dropdown-text">Select an Assignee</span>
+        <i class="fas fa-chevron-down dropdown-arrow"></i>
+      </div>
+      <div class="custom-dropdown-options" style="display: none;">
+      </div>
+    </div>
+  `);
+  
+  const $selected = $customDropdown.find('.custom-dropdown-selected');
+  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
+  const $hiddenSelect = $selectElement.clone().hide();
+  
+  // Populate options immediately with placeholder avatars, then load real avatars asynchronously
+  const options = $selectElement.find('option');
+  for (let i = 0; i < options.length; i++) {
+    const option = options[i];
+    const value = option.value;
+    const text = option.text;
+    const userId = option.getAttribute('data-user-id');
+    
+    if (value === '') continue; // Skip placeholder option
+    
+    // Start with placeholder or generated avatar
+    let initialAvatarUrl = 'images/profile_picture_placeholder.jpg';
+    if (value === userEmailId) {
+      // Use current user's profile image if available
+      const currentUserImage = document.querySelector(".user-profile-image");
+      if (currentUserImage && currentUserImage.src && !currentUserImage.src.includes('placeholder')) {
+        initialAvatarUrl = currentUserImage.src;
+      } else {
+        initialAvatarUrl = createAvatarCanvas(text);
+      }
+    } else {
+      // Use generated avatar for all other users initially
+      initialAvatarUrl = createAvatarCanvas(text);
+    }
+    
+    const $option = $(`
+      <div class="custom-dropdown-option" data-value="${value}">
+        <img class="dropdown-user-image" src="${initialAvatarUrl}" alt="${text}" data-user-id="${userId || ''}" data-display-name="${text}">
+        <span>${text}</span>
+      </div>
+    `);
+    
+    $optionsContainer.append($option);
+    
+    // Set default selection
+    if (option.selected) {
+      $selected.find('.dropdown-user-image').attr('src', initialAvatarUrl);
+      $selected.find('.dropdown-text').text(text);
+      $hiddenSelect.val(value);
+    }
+    
+    // Load real avatar asynchronously (non-blocking)
+    if (userId && value !== userEmailId) {
+      loadUserAvatarAsync(userId, text, $option.find('.dropdown-user-image'), $selected, value);
+    }
+  }
+  
+  // Replace original select with custom dropdown
+  $selectElement.after($customDropdown);
+  $selectElement.after($hiddenSelect);
+  $selectElement.remove();
+  
+  // Add event handlers
+  setupCustomDropdownEvents($customDropdown, $hiddenSelect, isRequired);
+}
+
+// Function to load user avatar asynchronously without blocking the UI
+async function loadUserAvatarAsync(userId, displayName, $img, $selected, value) {
+  try {
+    const avatarUrl = await fetchUserAvatar(userId, displayName);
+    
+    // Update the option image
+    $img.attr('src', avatarUrl);
+    
+    // If this is the currently selected option, update the selected display too
+    const $hiddenSelect = $selected.closest('.custom-dropdown').next('select');
+    if ($hiddenSelect.val() === value) {
+      $selected.find('.dropdown-user-image').attr('src', avatarUrl);
+    }
+  } catch (error) {
+    console.warn(`Failed to load avatar for ${displayName}:`, error);
+    // Keep the generated avatar that's already there
+  }
+}
+
+// Function to setup event handlers for custom dropdown
+function setupCustomDropdownEvents($customDropdown, $hiddenSelect, isRequired) {
+  const $selected = $customDropdown.find('.custom-dropdown-selected');
+  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
+  const $arrow = $customDropdown.find('.dropdown-arrow');
+  
+  // Toggle dropdown
+  $selected.on('click', function(e) {
+    e.stopPropagation();
+    $('.custom-dropdown-options').not($optionsContainer).hide();
+    $('.dropdown-arrow').not($arrow).removeClass('rotated');
+    
+    if ($optionsContainer.is(':visible')) {
+      $optionsContainer.hide();
+      $arrow.removeClass('rotated');
+    } else {
+      $optionsContainer.show();
+      $optionsContainer.css('display', 'block');
+      $arrow.addClass('rotated');
+    }
+  });
+  
+  // Handle option selection
+  $optionsContainer.on('click', '.custom-dropdown-option', function(e) {
+    e.stopPropagation();
+    const value = $(this).data('value');
+    const text = $(this).find('span').text();
+    const imageSrc = $(this).find('.dropdown-user-image').attr('src');
+    
+    // Update selected display
+    $selected.find('.dropdown-user-image').attr('src', imageSrc);
+    $selected.find('.dropdown-text').text(text);
+    
+    // Update hidden select
+    $hiddenSelect.val(value);
+    
+    // Trigger change event
+    $hiddenSelect.trigger('change');
+    
+    // Close dropdown
+    $optionsContainer.hide();
+    $arrow.removeClass('rotated');
+    
+    // Remove validation error if present
+    $customDropdown.removeClass('is-invalid');
+  });
+  
+  // Close dropdown when clicking outside
+  $(document).on('click', function() {
+    $optionsContainer.hide();
+    $arrow.removeClass('rotated');
+  });
+  
+  // Keyboard navigation
+  $selected.on('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      $selected.click();
+    }
+  });
+  
+  // Update validation methods to work with custom dropdown
+  const originalAddClass = $hiddenSelect.addClass;
+  $hiddenSelect.addClass = function(className) {
+    if (className === 'is-invalid') {
+      $customDropdown.addClass('is-invalid');
+    }
+    return originalAddClass.call(this, className);
+  };
+  
+  const originalRemoveClass = $hiddenSelect.removeClass;
+  $hiddenSelect.removeClass = function(className) {
+    if (className === 'is-invalid') {
+      $customDropdown.removeClass('is-invalid');
+    }
+    return originalRemoveClass.call(this, className);
+  };
 }
 
 // Function to fetch area paths for the selected team
@@ -1527,6 +1746,90 @@ async function fetchUserProfileImage() {
     .catch((error) => {
       console.error("Error fetching profile picture:", error);
     });
+}
+
+// Function to generate avatar initials for users
+function generateAvatarInitials(displayName) {
+  if (!displayName) return 'U';
+  
+  const names = displayName.trim().split(' ');
+  if (names.length === 1) {
+    return names[0].charAt(0).toUpperCase();
+  } else {
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+  }
+}
+
+// Function to generate a color based on the user's name
+function generateAvatarColor(displayName) {
+  const colors = [
+    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+    '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5'
+  ];
+  
+  let hash = 0;
+  for (let i = 0; i < displayName.length; i++) {
+    hash = displayName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  return colors[Math.abs(hash) % colors.length];
+}
+
+// Function to create an avatar canvas element
+function createAvatarCanvas(displayName, size = 24) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  canvas.width = size;
+  canvas.height = size;
+  
+  // Fill background
+  ctx.fillStyle = generateAvatarColor(displayName);
+  ctx.fillRect(0, 0, size, size);
+  
+  // Add text
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${Math.floor(size * 0.4)}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  const initials = generateAvatarInitials(displayName);
+  ctx.fillText(initials, size / 2, size / 2);
+  
+  return canvas.toDataURL();
+}
+
+// Function to fetch user avatar from Azure DevOps (with fallback to generated avatar)
+async function fetchUserAvatar(userId, displayName) {
+  const organization = $("#organization-select").val();
+  
+  // First try to fetch from Azure DevOps
+  try {
+    const authHeaders = await generateAuthHeaders(usePAT);
+    const avatarUrl = `https://dev.azure.com/${organization}/_api/_common/identityImage?id=${userId}&size=2`;
+    
+    // Test if the avatar URL is accessible
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(avatarUrl);
+      img.onerror = () => {
+        // Fallback to generated avatar
+        console.log(`Using generated avatar for ${displayName}`);
+        resolve(createAvatarCanvas(displayName));
+      };
+      img.src = avatarUrl;
+      
+      // Set a timeout to fallback if loading takes too long
+      setTimeout(() => {
+        resolve(createAvatarCanvas(displayName));
+      }, 2000);
+    });
+    
+  } catch (error) {
+    console.warn(`Failed to fetch avatar for user ${displayName}:`, error);
+    return createAvatarCanvas(displayName);
+  }
 }
 
 // Function to clear PAT from local storage and reload the page
