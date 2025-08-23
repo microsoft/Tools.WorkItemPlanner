@@ -1753,6 +1753,7 @@ function initializeSelect2Dropdowns() {
 
 // Format user options with avatars
 function formatUserOption(user) {
+  
   if (!user.id) {
     return user.text;
   }
@@ -1760,14 +1761,18 @@ function formatUserOption(user) {
   const $user = $(user.element);
   const userId = $user.data('user-id');
   const displayName = $user.data('display-name') || user.text;
-  
+    
   let avatarUrl = 'images/profile_picture_placeholder.jpg';
-  if (userId) {
+  if (userId && userId !== 'current-user') {
+    // Start with generated avatar immediately
     avatarUrl = createAvatarCanvas(displayName);
+  } else if (userId === 'current-user') {
+    console.log('Using placeholder for current user');
+    avatarUrl = 'images/profile_picture_placeholder.jpg';
   }
   
   return $(`
-    <div class="select2-user-option">
+    <div class="select2-user-option" data-user-id="${userId || ''}" data-display-name="${displayName}">
       <img class="select2-user-image" src="${avatarUrl}" alt="${displayName}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;">
       <span>${displayName}</span>
     </div>
@@ -2074,36 +2079,96 @@ function createAvatarCanvas(displayName, size = 24) {
   return canvas.toDataURL('image/png');
 }
 
+// Function to load user avatar asynchronously without blocking the UI
+async function loadUserAvatarAsync(userId, displayName, $img, $selected, value) {
+  try {
+    const avatarUrl = await fetchUserAvatar(userId, displayName);
+    
+    // Update the option image
+    $img.attr('src', avatarUrl);
+    
+    // If this is the currently selected option and we have the selected element, update it too
+    if ($selected && value) {
+      const $hiddenSelect = $selected.closest('.custom-dropdown').next('select');
+      if ($hiddenSelect.val() === value) {
+        $selected.find('.dropdown-user-image').attr('src', avatarUrl);
+      }
+    }
+    
+    console.log(`✅ Successfully loaded avatar for ${displayName}: ${avatarUrl.substring(0, 50)}...`);
+    console.log(`🖼️ Updated image src for ${displayName}`);
+  } catch (error) {
+    console.warn(`Failed to load avatar for ${displayName}:`, error);
+    // Keep the generated avatar that's already there
+  }
+}
+
 // Function to fetch user avatar from Azure DevOps (with fallback to generated avatar)
 async function fetchUserAvatar(userId, displayName) {
   const organization = $("#organization-select").val();
   
-  // First try to fetch from Azure DevOps
+  console.log(`🔍 [DEBUG] Attempting to load avatar for ${displayName}`);
+  console.log(`🔍 [DEBUG] Organization: ${organization}`);
+  console.log(`🔍 [DEBUG] User ID: ${userId}`);
+  
+  // Use backend proxy to avoid CORS and handle authentication
   try {
     const authHeaders = await generateAuthHeaders(usePAT);
-    const avatarUrl = `https://dev.azure.com/${organization}/_api/_common/identityImage?id=${userId}&size=2`;
+    console.log(`🔍 [DEBUG] Auth headers generated:`, authHeaders);
     
-    // Test if the avatar URL is accessible
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve(avatarUrl);
-      img.onerror = () => {
-        // Fallback to generated avatar
-        console.log(`Using generated avatar for ${displayName}`);
-        resolve(createAvatarCanvas(displayName));
-      };
-      img.src = avatarUrl;
-      
-      // Set a timeout to fallback if loading takes too long
-      setTimeout(() => {
-        resolve(createAvatarCanvas(displayName));
-      }, 8000);
+    // Use backend proxy endpoint
+    const proxyUrl = `/ado/api/${organization}/avatar/${userId}?size=2`;
+    console.log(`🧪 [DEBUG] Using backend proxy: ${proxyUrl}`);
+    
+    const response = await fetch(proxyUrl, {
+      method: 'GET',
+      headers: authHeaders
     });
     
+    console.log(`🧪 [DEBUG] Backend proxy response: ${response.status} ${response.statusText}`);
+    
+    if (response.ok) {
+      // Convert response to blob and create object URL
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      console.log(`✅ [DEBUG] Successfully fetched avatar via backend proxy for ${displayName}`);
+      return imageUrl;
+    } else {
+      const errorText = await response.text();
+      console.log(`❌ [DEBUG] Backend proxy failed: ${response.status} - ${errorText}`);
+      console.log(`🎨 [DEBUG] Using generated avatar for ${displayName}`);
+      return createAvatarCanvas(displayName);
+    }
+    
   } catch (error) {
-    console.warn(`Failed to fetch avatar for user ${displayName}:`, error);
+    console.error(`💥 [DEBUG] Exception in backend proxy for ${displayName}:`, error);
+    console.log(`🎨 [DEBUG] Using generated avatar due to exception`);
     return createAvatarCanvas(displayName);
   }
+}
+
+// Function to update avatars in the assignee dropdown after it's rendered
+function updateAssigneeDropdownAvatars() {
+  console.log('🔄 updateAssigneeDropdownAvatars called');
+  
+  // Find all user options in the currently open dropdown
+  const $userOptions = $('.select2-container--open .select2-user-option');
+  console.log(`Found ${$userOptions.length} user options in open dropdown`);
+  
+  $userOptions.each(function() {
+    const $option = $(this);
+    const userId = $option.attr('data-user-id');
+    const displayName = $option.attr('data-display-name');
+    const $img = $option.find('.select2-user-image');
+    
+    console.log(`Option: ${displayName}, UserID: ${userId}, Image found: ${$img.length > 0}`);
+        
+    if (userId && userId !== 'current-user' && $img.length > 0) {
+      console.log(`🔍 Loading real avatar for ${displayName} (ID: ${userId})`);
+      // Load real avatar asynchronously without blocking the UI
+      loadUserAvatarAsync(userId, displayName, $img);
+    }
+  });
 }
 
 // Function to clear PAT from local storage and reload the page

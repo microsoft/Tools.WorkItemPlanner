@@ -51,6 +51,13 @@ $(document).ready(function() {
     
     // Single timeout should be sufficient since focus is working
     setTimeout(focusSearch, 100);
+    
+    // Special handling for assignee dropdown to load real avatars
+    if (dropdownId === 'assigned-to-select') {
+      setTimeout(() => {
+        updateAssigneeDropdownAvatars();
+      }, 200);
+    }
   });
 });
 
@@ -479,6 +486,11 @@ $("#organization-select").on("change", async function () {
     clearWorkItemTypesDropdown();
     clearTeamDropdown();
     clearAssignedToDropdown();
+    
+    // Clean up avatar cache when organization changes since user IDs may be different
+    if (typeof cleanupAvatarCache === 'function') {
+      cleanupAvatarCache();
+    }
 
     // Refresh the projects dropdown
     await populateProjectsDropdown();
