@@ -50,7 +50,10 @@
   </header>
 
   <div class="container">
-    <form id="feature-form">
+    <form id="feature-form" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <!-- Autofill mitigation: hidden username/password fields to discourage password managers -->
+      <input type="text" name="fake-username" autocomplete="username" style="display:none" aria-hidden="true" tabindex="-1">
+      <input type="password" name="fake-password" autocomplete="new-password" style="display:none" aria-hidden="true" tabindex="-1">
 
       <h3 style="display: flex; align-items: center;">
         <img src="images/organization.webp" alt="Work Item Icon" class="icon">
@@ -59,15 +62,15 @@
       <hr>
       <small class="form-text text-muted">Choices are curated based on your access</small>
       <div class="form-group mb-3 d-flex">
-        <select class="form-control" id="organization-select" style="flex: 1;">
+  <select class="form-control" id="organization-select" style="flex: 1;" autocomplete="off" data-lpignore="true" aria-autocomplete="none">
           <option value="" disabled selected>Select an Organization</option>
         </select>
         
-        <select class="form-control ms-2" id="project-select" disabled style="flex: 1;">
+  <select class="form-control ms-2" id="project-select" disabled style="flex: 1;" autocomplete="off" data-lpignore="true" aria-autocomplete="none">
           <option value="" disabled selected>Select a Project</option>
         </select>
         
-        <select class="form-control ms-2" id="team-select" disabled style="flex: 1;">
+  <select class="form-control ms-2" id="team-select" disabled style="flex: 1;" autocomplete="off" data-lpignore="true" aria-autocomplete="none">
           <option value="" disabled selected>Select a Team</option>
         </select>
       </div>
@@ -89,7 +92,7 @@
           <!-- Assignee Input -->
           <div style="flex: 1; display: flex; flex-direction: column;">
             <small class="form-text text-muted">Assignee for the new Work Item(s)</small>
-            <select class="form-control" id="assigned-to-select" required disabled style="width: 100%;">
+            <select class="form-control" id="assigned-to-select" required disabled style="width: 100%;" autocomplete="off" data-lpignore="true" aria-autocomplete="none">
               <option value="" disabled selected>Select an Assignee</option>
             </select>
           </div>
@@ -124,7 +127,7 @@
         <div class="d-flex gap-3">
           <div class="flex-grow-1">
             <small class="form-text text-muted">Select Work Item Type</small>
-            <select class="form-control" id="work-item-type-select" disabled required>
+            <select class="form-control" id="work-item-type-select" disabled required autocomplete="off" data-lpignore="true" aria-autocomplete="none">
               <option value="" disabled selected>Select a Work Item Type</option>
             </select>
           </div>
