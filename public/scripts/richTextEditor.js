@@ -3,17 +3,82 @@
  */
 
 // Feature flag to enable/disable rich text editor
-window.ENABLE_RICH_TEXT_EDITOR = false;
+window.ENABLE_RICH_TEXT_EDITOR = false; // Toggle to true to enable rich formatting
 
 $(document).ready(function() {
-  // Set body class based on feature flag
   if (!window.ENABLE_RICH_TEXT_EDITOR) {
     document.body.classList.add('plain-text-mode');
-  }
-  
-  if (window.ENABLE_RICH_TEXT_EDITOR) {
+    convertEditorsToPlainText();
+  } else {
     initializeRichTextEditors();
   }
+});
+
+// Replace contenteditable divs with textarea elements for reliable Enter/newline handling in plain text mode
+function convertEditorsToPlainText() {
+  $('.rich-text-editor').each(function() {
+    const $div = $(this);
+    // Skip if already converted
+    if ($div.is('textarea')) return;
+    const html = $div.html();
+    // Convert <br> and block tags to newlines
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    // Replace <br> with \n
+    temp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+    // Add line breaks after block elements
+    const blockTags = ['P','DIV'];
+    temp.childNodes.forEach(node => {
+      if (node.nodeType === 1 && blockTags.includes(node.nodeName)) {
+        if (!/\n$/.test(node.textContent)) node.textContent += '\n';
+      }
+    });
+    const text = temp.textContent.replace(/\n{2,}/g,'\n').trim();
+    const placeholder = $div.data('placeholder') || '';
+    const classes = ($div.attr('class')||'')
+      .replace('rich-text-editor','')
+      .trim();
+    const $ta = $('<textarea/>', {
+      'class': classes + ' plain-text-auto-resize',
+      'placeholder': placeholder,
+      'rows': 1,
+      'style': 'resize:none; overflow:hidden;'
+    }).val(text);
+    // Preserve sizing
+    const minH = $div.css('min-height');
+    const maxH = $div.css('max-height');
+    if (minH) $ta.css('min-height', minH);
+    if (maxH) $ta.css('max-height', maxH);
+    $div.replaceWith($ta);
+    autoResizeTextarea($ta[0]);
+  });
+}
+
+// Auto-resize helper for plain text textareas
+function autoResizeTextarea(el) {
+  if (!el) return;
+  const $el = $(el);
+  // Respect max-height if defined
+  const maxH = parseInt($el.css('max-height')) || Infinity;
+  el.style.height = 'auto';
+  let newH = el.scrollHeight;
+  if (newH > maxH) {
+    newH = maxH;
+    el.style.overflowY = 'auto';
+  } else {
+    el.style.overflowY = 'hidden';
+  }
+  el.style.height = newH + 'px';
+}
+
+// Delegate input handler for dynamically added items
+$(document).on('input', 'textarea.plain-text-auto-resize', function() {
+  autoResizeTextarea(this);
+});
+
+// Also adjust on window resize (font metrics might change)
+$(window).on('resize', function() {
+  $('textarea.plain-text-auto-resize').each(function(){ autoResizeTextarea(this); });
 });
 
 function initializeRichTextEditors() {
@@ -175,10 +240,15 @@ function initializeRichTextEditors() {
       return false;
     }
     
-    // Handle Enter key to create proper line breaks
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      document.execCommand('insertHTML', false, '<br><br>');
+    // Handle Enter key to create a single line break (Shift+Enter can act the same)
+    if (e.key === 'Enter') {
+      // Allow browser default paragraph creation for standard Enter
+      if (e.shiftKey) {
+        // Shift+Enter -> soft break
+        e.preventDefault();
+        document.execCommand('insertHTML', false, '<br>');
+      }
+      return; // Don't block default
     }
   });
 
