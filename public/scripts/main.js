@@ -20,185 +20,6 @@ function getAssignedToSelect() {
   return $("#assigned-to-select");
 }
 
-// Helper function to setup custom dropdown for organization, project, and team
-function setupStandardCustomDropdown($customDropdown, $hiddenSelect) {
-  if (!$customDropdown.length || !$hiddenSelect.length) return;
-  
-  const $selected = $customDropdown.find('.custom-dropdown-selected');
-  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
-  const $arrow = $customDropdown.find('.dropdown-arrow');
-  let highlightedIndex = -1;
-  let searchBuffer = '';
-  let searchTimeout = null;
-  
-  // Click handler for the selected area
-  $selected.off('click').on('click', function(e) {
-    e.stopPropagation();
-    if ($customDropdown.hasClass('disabled')) return;
-    
-    const isOpen = $optionsContainer.is(':visible');
-    
-    // Close all other dropdowns and clear their highlights
-    $('.custom-dropdown-options').hide();
-    $('.dropdown-arrow').removeClass('rotated');
-    $('.custom-dropdown-option').removeClass('highlighted');
-    
-    if (!isOpen) {
-      $optionsContainer.show();
-      $arrow.addClass('rotated');
-      highlightedIndex = -1;
-      $selected.focus(); // Ensure focus for keyboard navigation
-    }
-  });
-  
-  // Keyboard navigation
-  $selected.off('keydown').on('keydown', function(e) {
-    if ($customDropdown.hasClass('disabled')) return;
-    
-    const $options = $optionsContainer.find('.custom-dropdown-option');
-    const isOpen = $optionsContainer.is(':visible');
-    
-    switch(e.key) {
-      case 'Enter':
-      case ' ':
-        e.preventDefault();
-        if (!isOpen) {
-          $optionsContainer.show();
-          $arrow.addClass('rotated');
-          highlightedIndex = -1;
-        } else if (highlightedIndex >= 0) {
-          $options.eq(highlightedIndex).click();
-        }
-        break;
-        
-        case 'Escape':
-        e.preventDefault();
-        $optionsContainer.hide();
-        $arrow.removeClass('rotated');
-        $optionsContainer.find('.custom-dropdown-option').removeClass('highlighted');
-        highlightedIndex = -1;
-        searchBuffer = '';
-        break;      case 'ArrowDown':
-        e.preventDefault();
-        if (!isOpen) {
-          $optionsContainer.show();
-          $arrow.addClass('rotated');
-          highlightedIndex = 0;
-        } else {
-          highlightedIndex = Math.min(highlightedIndex + 1, $options.length - 1);
-        }
-        updateHighlight($options, highlightedIndex, $optionsContainer);
-        break;
-        
-      case 'ArrowUp':
-        e.preventDefault();
-        if (isOpen) {
-          highlightedIndex = Math.max(highlightedIndex - 1, 0);
-          updateHighlight($options, highlightedIndex, $optionsContainer);
-        }
-        break;
-        
-      default:
-        // Type-ahead search (works whether dropdown is open or closed)
-        if (e.key.length === 1 && /[a-zA-Z0-9\s]/.test(e.key)) {
-          e.preventDefault();
-          
-          if (!isOpen) {
-            $optionsContainer.show();
-            $arrow.addClass('rotated');
-          }
-          
-          // Build search buffer for multi-character search
-          searchBuffer += e.key.toLowerCase();
-          
-          // Clear previous timeout
-          if (searchTimeout) {
-            clearTimeout(searchTimeout);
-          }
-          
-          // Find matching option
-          const matchIndex = findOptionByText($options, searchBuffer, 0);
-          if (matchIndex >= 0) {
-            highlightedIndex = matchIndex;
-            updateHighlight($options, highlightedIndex, $optionsContainer);
-          }
-          
-          // Clear search buffer after delay
-          searchTimeout = setTimeout(() => {
-            searchBuffer = '';
-          }, 1000);
-        }
-        break;
-    }
-  });
-  
-  // Option click handler
-  $optionsContainer.off('click', '.custom-dropdown-option').on('click', '.custom-dropdown-option', function(e) {
-    e.stopPropagation();
-    const $option = $(this);
-    const value = $option.data('value');
-    const text = $option.text();
-    
-    // Update hidden select
-    $hiddenSelect.val(value);
-    
-    // Update display
-    $selected.find('.dropdown-text').text(text);
-    
-    // Close dropdown
-    $optionsContainer.hide();
-    $arrow.removeClass('rotated');
-    $optionsContainer.find('.custom-dropdown-option').removeClass('highlighted');
-    highlightedIndex = -1;
-    searchBuffer = '';
-    
-    // Trigger change event on hidden select
-    $hiddenSelect.trigger('change');
-  });
-  
-  // Close dropdown when clicking outside
-  $(document).on('click', function() {
-    $optionsContainer.hide();
-    $arrow.removeClass('rotated');
-    $optionsContainer.find('.custom-dropdown-option').removeClass('highlighted');
-    highlightedIndex = -1;
-    searchBuffer = '';
-  });
-  
-  // Helper function to update highlighted option
-  function updateHighlight($options, index, $container) {
-    $options.removeClass('highlighted');
-    if (index >= 0 && index < $options.length) {
-      const $highlighted = $options.eq(index);
-      $highlighted.addClass('highlighted');
-      
-      // Scroll highlighted option into view
-      const optionTop = $highlighted.position().top;
-      const optionHeight = $highlighted.outerHeight();
-      const containerHeight = $container.height();
-      const scrollTop = $container.scrollTop();
-      
-      if (optionTop < 0) {
-        $container.scrollTop(scrollTop + optionTop);
-      } else if (optionTop + optionHeight > containerHeight) {
-        $container.scrollTop(scrollTop + optionTop + optionHeight - containerHeight);
-      }
-    }
-  }
-  
-  // Helper function to find option by starting text
-  function findOptionByText($options, searchText, startIndex = 0) {
-    for (let i = 0; i < $options.length; i++) {
-      const index = (startIndex + i) % $options.length;
-      const optionText = $options.eq(index).text().toLowerCase().trim();
-      if (optionText.startsWith(searchText)) {
-        return index;
-      }
-    }
-    return -1;
-  }
-}
-
 const trackProgress = async (message, fn) => {
   showLoadingIndicator(message);
   return fn();
@@ -1119,11 +940,8 @@ async function populateOrganizationsDropdown() {
 
   //Populate the dropdown with fetched organizations
   const organizationSelect = document.getElementById("organization-select");
-  const $customDropdown = $("#organization-select-custom");
-  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
 
   // Clear existing options
-  $optionsContainer.empty();
   while (organizationSelect.options.length > 1) {
     organizationSelect.remove(1);
   }
@@ -1133,23 +951,11 @@ async function populateOrganizationsDropdown() {
 
   // Add fetched organizations as options
   organizations.forEach((organization) => {
-    // Add to hidden select
     const option = document.createElement("option");
     option.value = organization.accountName;
     option.textContent = organization.accountName;
     organizationSelect.appendChild(option);
-    
-    // Add to custom dropdown
-    const $option = $(`
-      <div class="custom-dropdown-option" data-value="${organization.accountName}">
-        <span>${organization.accountName}</span>
-      </div>
-    `);
-    $optionsContainer.append($option);
   });
-  
-  // Setup custom dropdown events
-  setupStandardCustomDropdown($customDropdown, $(organizationSelect));
 }
 
 
@@ -1179,7 +985,6 @@ async function fetchProjectsForOrganization(organization) {
 // Function to clear project-select dropdown
 function clearProjectSelect() {
   const projectSelect = document.getElementById("project-select");
-  const $customDropdown = $("#project-select-custom");
 
   // Remove all options except the first one
   while (projectSelect.options.length > 1) {
@@ -1188,13 +993,6 @@ function clearProjectSelect() {
 
   projectSelect.selectedIndex = 0;
   projectSelect.disabled = true;
-  
-  // Reset custom dropdown
-  $customDropdown.addClass('disabled');
-  $customDropdown.find('.dropdown-text').text('Select a Project');
-  $customDropdown.find('.custom-dropdown-options').empty();
-  $customDropdown.find('.custom-dropdown-option').removeClass('highlighted');
-  $customDropdown.find('.custom-dropdown-selected').attr('tabindex', '-1');
 }
 
 // Function to populate projects into project-select
@@ -1217,34 +1015,15 @@ async function populateProjectsDropdown() {
 
   // Add fetched projects as options
   const projectSelect = document.getElementById("project-select");
-  const $customDropdown = $("#project-select-custom");
-  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
-  
-  // Clear custom dropdown options
-  $optionsContainer.empty();
   
   projects.forEach((project) => {
-    // Add to hidden select
     const option = document.createElement("option");
     option.value = project.name;
     option.textContent = project.name;
     projectSelect.appendChild(option);
-    
-    // Add to custom dropdown
-    const $option = $(`
-      <div class="custom-dropdown-option" data-value="${project.name}">
-        <span>${project.name}</span>
-      </div>
-    `);
-    $optionsContainer.append($option);
   });
 
   projectSelect.disabled = false;
-  $customDropdown.removeClass('disabled');
-  $customDropdown.find('.custom-dropdown-selected').attr('tabindex', '0');
-  
-  // Setup custom dropdown events
-  setupStandardCustomDropdown($customDropdown, $(projectSelect));
 }
 
 // Function to construct Auth Headers for Azure DevOps
@@ -1469,41 +1248,21 @@ function populateTeamDropdown(teams) {
   } else {
     clearTeamDropdown();
     const teamSelect = document.getElementById("team-select");
-    const $customDropdown = $("#team-select-custom");
-    const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
-    
-    // Clear custom dropdown options
-    $optionsContainer.empty();
 
     teams.forEach((team) => {
-      // Add to hidden select
       const option = document.createElement("option");
       option.value = team.id;
       option.textContent = team.name;
       teamSelect.appendChild(option);
-      
-      // Add to custom dropdown
-      const $option = $(`
-        <div class="custom-dropdown-option" data-value="${team.id}">
-          <span>${team.name}</span>
-        </div>
-      `);
-      $optionsContainer.append($option);
     });
 
     teamSelect.disabled = false;
-    $customDropdown.removeClass('disabled');
-    $customDropdown.find('.custom-dropdown-selected').attr('tabindex', '0');
-    
-    // Setup custom dropdown events
-    setupStandardCustomDropdown($customDropdown, $(teamSelect));
   }
 }
 
 // Function to clear team-select dropdown
 function clearTeamDropdown() {
   const teamSelect = document.getElementById("team-select");
-  const $customDropdown = $("#team-select-custom");
 
   // Remove all options except the first one
   while (teamSelect.options.length > 1) {
@@ -1512,13 +1271,6 @@ function clearTeamDropdown() {
 
   teamSelect.selectedIndex = 0;
   teamSelect.disabled = true;
-  
-  // Reset custom dropdown
-  $customDropdown.addClass('disabled');
-  $customDropdown.find('.dropdown-text').text('Select a Team');
-  $customDropdown.find('.custom-dropdown-options').empty();
-  $customDropdown.find('.custom-dropdown-option').removeClass('highlighted');
-  $customDropdown.find('.custom-dropdown-selected').attr('tabindex', '-1');
 }
 
 // Function to fetch iterations for the selected team from Azure DevOps using AJAX
@@ -1809,85 +1561,6 @@ function formatUserSelection(user) {
   `);
 }
 
-// Function to setup event handlers for custom dropdown
-function setupCustomDropdownEvents($customDropdown, $hiddenSelect, isRequired) {
-  const $selected = $customDropdown.find('.custom-dropdown-selected');
-  const $optionsContainer = $customDropdown.find('.custom-dropdown-options');
-  const $arrow = $customDropdown.find('.dropdown-arrow');
-  
-  // Toggle dropdown
-  $selected.on('click', function(e) {
-    e.stopPropagation();
-    $('.custom-dropdown-options').not($optionsContainer).hide();
-    $('.dropdown-arrow').not($arrow).removeClass('rotated');
-    
-    if ($optionsContainer.is(':visible')) {
-      $optionsContainer.hide();
-      $arrow.removeClass('rotated');
-    } else {
-      $optionsContainer.show();
-      $optionsContainer.css('display', 'block');
-      $arrow.addClass('rotated');
-    }
-  });
-  
-  // Handle option selection
-  $optionsContainer.on('click', '.custom-dropdown-option', function(e) {
-    e.stopPropagation();
-    const value = $(this).data('value');
-    const text = $(this).find('span').text();
-    const imageSrc = $(this).find('.dropdown-user-image').attr('src');
-    
-    // Update selected display
-    $selected.find('.dropdown-user-image').attr('src', imageSrc);
-    $selected.find('.dropdown-text').text(text);
-    
-    // Update hidden select
-    $hiddenSelect.val(value);
-    
-    // Trigger change event
-    $hiddenSelect.trigger('change');
-    
-    // Close dropdown
-    $optionsContainer.hide();
-    $arrow.removeClass('rotated');
-    
-    // Remove validation error if present
-    $customDropdown.removeClass('is-invalid');
-  });
-  
-  // Close dropdown when clicking outside
-  $(document).on('click', function() {
-    $optionsContainer.hide();
-    $arrow.removeClass('rotated');
-  });
-  
-  // Keyboard navigation
-  $selected.on('keydown', function(e) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      $selected.click();
-    }
-  });
-  
-  // Update validation methods to work with custom dropdown
-  const originalAddClass = $hiddenSelect.addClass;
-  $hiddenSelect.addClass = function(className) {
-    if (className === 'is-invalid') {
-      $customDropdown.addClass('is-invalid');
-    }
-    return originalAddClass.call(this, className);
-  };
-  
-  const originalRemoveClass = $hiddenSelect.removeClass;
-  $hiddenSelect.removeClass = function(className) {
-    if (className === 'is-invalid') {
-      $customDropdown.removeClass('is-invalid');
-    }
-    return originalRemoveClass.call(this, className);
-  };
-}
-
 // Function to fetch area paths for the selected team
 async function fetchAreaPathsForTeam() {
   const organization = $("#organization-select").val();
@@ -2086,14 +1759,6 @@ async function loadUserAvatarAsync(userId, displayName, $img, $selected, value) 
     
     // Update the option image
     $img.attr('src', avatarUrl);
-    
-    // If this is the currently selected option and we have the selected element, update it too
-    if ($selected && value) {
-      const $hiddenSelect = $selected.closest('.custom-dropdown').next('select');
-      if ($hiddenSelect.val() === value) {
-        $selected.find('.dropdown-user-image').attr('src', avatarUrl);
-      }
-    }
     
     console.log(`✅ Successfully loaded avatar for ${displayName}: ${avatarUrl.substring(0, 50)}...`);
     console.log(`🖼️ Updated image src for ${displayName}`);
