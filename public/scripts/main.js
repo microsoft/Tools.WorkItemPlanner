@@ -88,6 +88,10 @@ async function onSuccessLogin() {
   initializeSelect2Dropdowns();
 
   hideLoadingIndicator();
+  // Trigger first run guide (if not completed before)
+  if (window.FirstRunGuide && typeof window.FirstRunGuide.maybeStart === 'function') {
+    window.FirstRunGuide.maybeStart();
+  }
 }
 
 // Update deliverable count

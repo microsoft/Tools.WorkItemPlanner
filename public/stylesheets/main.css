@@ -921,3 +921,39 @@ body.plain-text-mode .task-description:focus {
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
   background-color: rgba(0, 123, 255, 0.05);
 }
+
+/* ===== First Run Guide (inline lightweight styles) ===== */
+.frg-overlay {
+  position: fixed;
+  top: 0; left: 0; right:0; bottom:0;
+  background: rgba(0,0,0,0.35);
+  z-index: 2000;
+  animation: frgFade .25s ease;
+}
+.frg-tooltip {
+  position: absolute;
+  max-width: 320px;
+  background: linear-gradient(135deg,#ffffff 0%,#f5f9ff 100%);
+  color: #111;
+  border-radius: 8px;
+  padding: 14px 16px 12px;
+  box-shadow: 0 8px 22px -6px rgba(22,42,71,.25), 0 0 0 1px rgba(120,150,190,.15);
+  border: 1px solid rgba(120,150,190,0.35);
+  z-index: 2001;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.frg-tooltip:before { content:""; position:absolute; top:0; left:0; right:0; height:4px; border-radius:8px 8px 0 0; background: linear-gradient(90deg,#2563eb,#4f46e5,#0ea5e9); background-size:200% 100%; animation: frgBar 4s linear infinite; }
+.frg-tooltip h4 { margin: 2px 0 8px; font-size: 16px; font-weight: 600; letter-spacing:.25px; color:#143a66; display:flex; align-items:center; gap:6px; }
+.frg-tooltip h4:before { content:"\f05a"; font-family:"Font Awesome 5 Free"; font-weight:900; font-size:14px; color:#2563eb; opacity:.85; }
+.frg-tooltip p { margin:0 0 4px; color:#1f2732; font-size:13.5px; line-height:1.5; }
+.frg-tooltip p + p { margin-top:6px; }
+.frg-actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.frg-btn { background: #2563eb; border: none; color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.frg-btn:hover { background:#1e4fb8; }
+.frg-skip { margin-left: auto; background: transparent; border: none; color:#666; font-size:12px; cursor: pointer; }
+.frg-skip:hover { color:#111; text-decoration: underline; }
+.frg-highlight { position: relative; box-shadow: 0 0 0 3px #2563eb80, 0 0 0 6px #ffffff40; border-radius:4px; transition: box-shadow .2s ease; animation: frgPulse 1.6s ease-in-out infinite; }
+@keyframes frgFade { from { opacity:0;} to { opacity:1;} }
+@keyframes frgBar { 0% { background-position:0 0;} 100% { background-position:200% 0;} }
+@keyframes frgPulse { 0% { box-shadow: 0 0 0 3px #2563eb80, 0 0 0 6px #ffffff40; } 50% { box-shadow: 0 0 0 5px #2563ebaa, 0 0 0 10px #ffffff10; } 100% { box-shadow: 0 0 0 3px #2563eb80, 0 0 0 6px #ffffff40; } }
