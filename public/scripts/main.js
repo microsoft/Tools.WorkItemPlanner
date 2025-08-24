@@ -44,6 +44,9 @@ async function onSuccessLogin() {
   console.log("Login Complete");
   showLoadingIndicator();
 
+  // Reveal app UI now that auth is complete
+  $('#app-root').removeClass('app-root-hidden');
+
   await Promise.allSettled([
     (async () => {
       await delay(0);

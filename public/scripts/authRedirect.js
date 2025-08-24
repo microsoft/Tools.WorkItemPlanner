@@ -60,25 +60,20 @@ myMSALObj.addEventCallback((event) => {
  * Otherwise, it handles the redirect flow for authentication.
  */
 function signIn() {
-  const currentAccounts = myMSALObj.getAllAccounts();
-  if (currentAccounts.length >= 1) {
-    setUserAuthContext();
-    onSuccessLogin();
-  } else {
-    console.log('get active account', myMSALObj.getActiveAccount());
-    // Handle auth redirect
-    myMSALObj.handleRedirectPromise().then(authResult => {
-      // Check if user signed in
-      const account = myMSALObj.getActiveAccount();
-      if (!account) {
-        // Redirect anonymous user to login page
-        myMSALObj.loginRedirect();
-      }
-    }).catch(error => {
-      console.log('error', error);
-      throw error;
-    });
-  }
+  // Always process any pending redirect first before deciding what to show
+  myMSALObj.handleRedirectPromise().then(() => {
+    const currentAccounts = myMSALObj.getAllAccounts();
+    if (currentAccounts.length >= 1) {
+      setUserAuthContext();
+      onSuccessLogin();
+    } else {
+      // No account -> go straight to redirect BEFORE showing UI
+      myMSALObj.loginRedirect();
+    }
+  }).catch(error => {
+    console.log('error', error);
+    throw error;
+  });
 }
 
 /**

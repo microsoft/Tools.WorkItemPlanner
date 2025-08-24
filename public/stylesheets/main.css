@@ -133,6 +133,9 @@ body {
   background-color: #f4f4f4;
 }
 
+/* Hide app root until auth completes to avoid flicker (revealed via JS in onSuccessLogin) */
+.app-root-hidden { display: none !important; }
+
 body::before {
   content: "";
   position: fixed;
