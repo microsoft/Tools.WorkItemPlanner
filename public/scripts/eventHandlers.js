@@ -9,6 +9,22 @@ $(document).ready(function () {
   }
 });
 
+// Helper: unified way to extract description content regardless of editor mode
+function getDescriptionContent($editorEl) {
+  try {
+    if (window.RichTextEditor && typeof window.RichTextEditor.getRichTextContent === 'function') {
+      return window.RichTextEditor.getRichTextContent($editorEl).trim();
+    }
+  } catch (e) {
+    // Swallow – fallback paths below should still work
+    console.debug('RichTextEditor get content failed, falling back.', e);
+  }
+  if ($editorEl.is('textarea')) {
+    return ($editorEl.val() || '').trim();
+  }
+  return ($editorEl.text() || '').trim();
+}
+
 // Select2 specific event handlers for dropdown closing behavior
 $(document).ready(function() {
   // Force close dropdown on selection for all dropdowns
@@ -245,11 +261,9 @@ $("#feature-form").on("submit", function (e) {
     $(".deliverable-item").each(function (index) {
       const deliverableTitle = $(this).find(".deliverable-title").val();
       
-      // Get rich text content for deliverable description
-      const $deliverableDescEditor = $(this).find(".deliverable-description");
-      const deliverableDescription = (window.RichTextEditor && window.ENABLE_RICH_TEXT_EDITOR) ? 
-        window.RichTextEditor.getRichTextContent($deliverableDescEditor).trim() : 
-        $deliverableDescEditor.text().trim();
+  // Get description for deliverable (supports rich text & plain modes)
+  const $deliverableDescEditor = $(this).find(".deliverable-description");
+  const deliverableDescription = getDescriptionContent($deliverableDescEditor);
       
       const tasks = [];
 
@@ -260,11 +274,9 @@ $("#feature-form").on("submit", function (e) {
           if (taskTitle) { // Only add task if title is not empty
             totalTasksCount++;
             
-            // Get rich text content for task description
+            // Get description for task (supports rich text & plain modes)
             const $taskDescEditor = $(this).find(".task-description");
-            const taskDescription = (window.RichTextEditor && window.ENABLE_RICH_TEXT_EDITOR) ? 
-              window.RichTextEditor.getRichTextContent($taskDescEditor).trim() : 
-              $taskDescEditor.text().trim();
+            const taskDescription = getDescriptionContent($taskDescEditor);
             
             tasks.push({ 
               title: taskTitle, 

@@ -281,8 +281,11 @@ function updateToolbarButtonStates(toolbar) {
 // Helper functions for getting and setting rich text content
 function getRichTextContent(element) {
   if (element && element.length > 0) {
+    // Plain text mode or textarea: return value/text consistently
     if (!window.ENABLE_RICH_TEXT_EDITOR) {
-      // For plain text mode, return the text content
+      if (element.is('textarea')) {
+        return (element.val() || '').trim();
+      }
       return element.text().trim();
     }
     
@@ -299,8 +302,11 @@ function getRichTextContent(element) {
 function setRichTextContent(element, content) {
   if (element && element.length > 0) {
     if (!window.ENABLE_RICH_TEXT_EDITOR) {
-      // For plain text mode, set text content
-      element.text(content || '');
+      if (element.is('textarea')) {
+        element.val(content || '').trigger('input');
+      } else {
+        element.text(content || '');
+      }
       return;
     }
     
