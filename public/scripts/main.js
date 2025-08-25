@@ -1071,6 +1071,8 @@ function hideLoadingIndicator() {
 
 // Function to populate the form with preconfigured data
 async function populateFormWithPreconfiguredData(data) {
+  // Track whether any deliverable or task includes a description (non-empty after trim)
+  let hasAnyDescription = false;
   const $firstDeliverable = $(".deliverable-item:first");
   const $firstTaskItem = $firstDeliverable.find(".task-item:first");
   $firstDeliverable.removeClass("is-invalid");
@@ -1094,6 +1096,9 @@ async function populateFormWithPreconfiguredData(data) {
   // Loop through each additional deliverable in the preconfigured data
   for (let i = 0; i < data.template.workitems.length; i++) {
     const deliverable = data.template.workitems[i];
+    if (deliverable.description && deliverable.description.trim()) {
+      hasAnyDescription = true;
+    }
     const $newDeliverable = $firstDeliverable.clone();
 
     $newDeliverable.attr("data-index", i + 1);
@@ -1105,6 +1110,9 @@ async function populateFormWithPreconfiguredData(data) {
     // Clone the first task item for each task in the deliverable
     for (let j = 1; j < deliverable.tasks.length; j++) {
       const task = deliverable.tasks[j];
+      if (task.description && task.description.trim()) {
+        hasAnyDescription = true;
+      }
       const $newTaskItem = $taskItemTemplate.clone();
       updateTask($newTaskItem, task);
       $newDeliverable.find(".task-list").append($newTaskItem);
@@ -1124,6 +1132,14 @@ async function populateFormWithPreconfiguredData(data) {
       containment: "parent", // Contain within the parent deliverable
       tolerance: "pointer", // Drag only when pointer is within the task item
     });
+  }
+
+  // If no descriptions present anywhere, ensure all description sections remain collapsed
+  if (!hasAnyDescription) {
+    $("#deliverables-container .description-section").each(function() {
+      $(this).hide();
+    });
+    $("#deliverables-container .description-caret").removeClass("rotated");
   }
 
   $firstDeliverable.remove();
