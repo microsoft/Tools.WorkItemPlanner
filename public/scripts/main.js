@@ -162,7 +162,7 @@ async function updateDeleteDeliverableButtons() {
 
 // Validate feature ID, area path, and iteration
 function validateForm() {
-  const featureId = $("#feature-id").val();
+  const featureId = $("#feature-id").val(); // optional
   const project = $("#project-select").val();
   const team = $("#team-select").val();
   const $assignedToSelect = getAssignedToSelect();
@@ -211,10 +211,7 @@ function validateForm() {
     return;
   }
 
-  if (!featureId) {
-    $("#feature-id").addClass("is-invalid");
-    isValid = false;
-  }
+  // featureId optional – no validation error if absent
 
   if (!areaPath) {
     $("#area-path").addClass("is-invalid");
@@ -524,7 +521,7 @@ async function createDeliverablesAndTasks(data) {
     let currentDeliverableTaskCount = 0;
     let currentDeliverableCount = 0;
     //Create Deliverables
-    for (const deliverable of data.deliverables) {
+  for (const deliverable of data.deliverables) {
       const deliverableData = [
         {
           op: "add",
@@ -546,17 +543,16 @@ async function createDeliverablesAndTasks(data) {
           path: "/fields/System.AssignedTo",
           value: selectedUserEmail,
         },
-        {
+        // Parent linkage only if a feature/parent id is provided
+        ...(featureIdVal ? [{
           op: "add",
           path: "/relations/-",
           value: {
             rel: "System.LinkTypes.Hierarchy-Reverse",
             url: `${_azureDevOpsApiBaseUrl}/_apis/wit/workItems/${featureIdVal}` + "?api-version=7.0",
-            attributes: {
-              comment: "Linking child Work-Item to Parent Work-Item",
-            },
+            attributes: { comment: "Linking child Work-Item to Parent Work-Item" },
           },
-        },
+        }] : []),
       ];
 
       // Add description if provided

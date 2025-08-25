@@ -299,13 +299,22 @@ $("#feature-form").on("submit", function (e) {
 
     // Call the API to create Work-Items
     createDeliverablesAndTasks(data)
-      .then(() => getLinkedWorkItemsQuery(featureIdVal)) // Fetch the linked work items query
-      .then((queryUrl) => {
-        showSuccessPopup(
-          `Work Item(s) saved to Azure DevOps.<br/><br/>
-           <a href="${queryUrl}" target="_blank">Click here</a> to view the Work Item(s).<br/><br/>
-           Got suggestions? I'd love to hear them – <a href="https://forms.office.com/r/6QYanppNWa" target="_blank">Submit Feedback</a> `
-        );
+      .then(() => {
+        if (featureIdVal) {
+          return getLinkedWorkItemsQuery(featureIdVal).then((queryUrl) => ({ queryUrl }));
+        }
+        return { queryUrl: null };
+      })
+      .then(({ queryUrl }) => {
+        const feedbackLink = 'Got suggestions? I\'d love to hear them – <a href="https://forms.office.com/r/6QYanppNWa" target="_blank">Submit Feedback</a>';
+        let message = 'Work Item(s) saved to Azure DevOps.';
+        if (queryUrl) {
+          message += `<br/><br/><a href="${queryUrl}" target="_blank">Click here</a> to view the Work Item(s).`;
+        } else {
+          message += '<br/><br/>No parent Work Item provided; items were created standalone.';
+        }
+        message += `<br/><br/>${feedbackLink}`;
+        showSuccessPopup(message);
         stopProgressBar(false);
         resetForm();
         hideLoadingIndicator();

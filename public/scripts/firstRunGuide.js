@@ -4,6 +4,9 @@
 (function () {
     const STORAGE_KEY = 'wip_first_run_completed_v1';
     const ALWAYS_SHOW_TOUR = true; // Force showing tour on every load
+    // Configurable intro video (host a file under public/ e.g. /videos/intro.mp4 or use an external URL)
+    // Intro video currently disabled (set to a valid path later to enable)
+    const INTRO_VIDEO_URL = null; // e.g. '/videos/work-item-planner-intro.mp4'
     if (typeof Storage === 'undefined') return;
 
     function hasCompleted() {
@@ -26,7 +29,15 @@
 
     function buildSteps() {
         // Each step: selector, title, body
-        return [
+        const steps = [
+            {
+                // Intro step has no selector (centered modal-style)
+                selector: null,
+                title: 'Welcome to Work Item Planner',
+                body: 'Generate Work Items (User Stories / Tasks / etc) with ease. This guided tour will highlight the key fields so you can create a full set of planned work items in seconds.',
+                videoUrl: INTRO_VIDEO_URL, // Optional video (silently ignored if file missing)
+                dismissText: 'Start Tour'
+            },
             {
                 selector: '#organization-select',
                 title: 'Pick Organization',
@@ -44,8 +55,8 @@
             },
             {
                 selector: '#feature-id',
-                title: 'Parent Work Item',
-                body: 'Enter the existing parent Work Item (e.g. Feature) under which new Work Items will be created.'
+                title: 'Parent Work Item (Optional)',
+                body: 'If you have an existing parent (e.g. Feature) enter its ID to link new Work Items under it. Leave blank to create standalone Work Items.'
             },
             {
                 selector: '#assigned-to-select',
@@ -83,7 +94,8 @@
                 title: 'Save to Azure DevOps',
                 body: 'When ready, submit to create the Work Items in Azure DevOps.'
             }
-        ];
+    ];
+    return steps;
     }
 
     function runTour() {
@@ -100,8 +112,9 @@
                 return;
             }
             const step = steps[index];
-            const el = document.querySelector(step.selector);
-            if (!el) {
+            const hasSelector = !!step.selector;
+            const el = hasSelector ? document.querySelector(step.selector) : null;
+            if (hasSelector && !el) {
                 // If element not present (maybe not enabled yet) retry shortly a limited number of times
                 if (step._retries === undefined) step._retries = 0;
                 if (step._retries < 10) {
@@ -115,22 +128,25 @@
             }
             // If this is a Select2-enhanced select, use the visible container instead of the hidden original element.
             let highlightEl = el;
-            if (el.tagName === 'SELECT' && el.classList.contains('select2-hidden-accessible')) {
-                const maybeContainer = el.nextElementSibling; // Select2 injects the container right after the select
+            if (highlightEl && highlightEl.tagName === 'SELECT' && highlightEl.classList.contains('select2-hidden-accessible')) {
+                const maybeContainer = highlightEl.nextElementSibling; // Select2 injects the container right after the select
                 if (maybeContainer && maybeContainer.classList.contains('select2')) {
                     highlightEl = maybeContainer;
                 }
             }
-            const rect = highlightEl.getBoundingClientRect();
+            const rect = highlightEl ? highlightEl.getBoundingClientRect() : null;
             // Create overlay & tooltip
             const overlay = document.createElement('div');
             overlay.className = 'frg-overlay';
             const tooltip = document.createElement('div');
             tooltip.className = 'frg-tooltip';
-            tooltip.innerHTML = '<h4>' + step.title + '</h4><p>' + step.body + '</p>' +
+            // Build dynamic body (support optional video)
+            const actionPrimaryLabel = step.dismissText || (index === steps.length - 1 ? 'Done' : 'Next');
+            const videoHtml = step.videoUrl ? '<div class="frg-video-wrapper"><video style="width:100%;border:1px solid #d4dbe4;border-radius:6px;margin:6px 0 4px;max-height:240px;object-fit:cover;background:#0f172a;" controls preload="metadata"><source src="' + step.videoUrl + '"><p>Your browser does not support embedded video.</p></video></div>' : '';
+            tooltip.innerHTML = '<h4>' + step.title + '</h4><p>' + step.body + '</p>' + videoHtml +
                 '<div class="frg-actions">' +
                 (index > 0 ? '<button type="button" class="frg-btn frg-prev">Back</button>' : '') +
-                '<button type="button" class="frg-btn frg-next">' + (index === steps.length - 1 ? 'Done' : 'Next') + '</button>' +
+                '<button type="button" class="frg-btn frg-next">' + actionPrimaryLabel + '</button>' +
                 '<button type="button" class="frg-skip" title="Skip">Skip</button>' +
                 '</div>';
 
@@ -138,9 +154,12 @@
             document.body.appendChild(tooltip);
 
             // Highlight target
-            highlightEl.classList.add('frg-highlight');
-
-            positionTooltip(tooltip, rect);
+            if (highlightEl) {
+                highlightEl.classList.add('frg-highlight');
+                positionTooltip(tooltip, rect);
+            } else {
+                centerTooltip(tooltip);
+            }
 
             tooltip.querySelector('.frg-next').addEventListener('click', () => { current++; showStep(current); });
             const prevBtn = tooltip.querySelector('.frg-prev');
@@ -148,7 +167,9 @@
             tooltip.querySelector('.frg-skip').addEventListener('click', () => { setCompleted(); cleanup(true); });
 
             // Scroll into view if needed
-            highlightEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (highlightEl) {
+                highlightEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
 
         function positionTooltip(tooltip, rect) {
@@ -181,11 +202,22 @@
         window.addEventListener('resize', () => {
             const tt = document.querySelector('.frg-tooltip');
             const hl = document.querySelector('.frg-highlight');
-            if (tt && hl) {
-                positionTooltip(tt, hl.getBoundingClientRect());
+            if (tt) {
+                if (hl) {
+                    positionTooltip(tt, hl.getBoundingClientRect());
+                } else {
+                    centerTooltip(tt);
+                }
             }
         });
 
         showStep(current);
+    }
+
+    function centerTooltip(tooltip) {
+        tooltip.style.top = '50%';
+        tooltip.style.left = '50%';
+        tooltip.style.transform = 'translate(-50%, -50%)';
+        tooltip.style.maxWidth = '480px';
     }
 })();
