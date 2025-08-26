@@ -1598,7 +1598,36 @@ function initializeSelect2Dropdowns() {
     templateSelection: formatUserSelection,
     escapeMarkup: function(markup) { return markup; },
     minimumResultsForSearch: 0, // Always show search box
-    dropdownCssClass: 'select2-dropdown-large'
+    dropdownCssClass: 'select2-dropdown-large',
+    matcher: function(params, data) {
+      // If there are no search terms, return all data
+      if ($.trim(params.term) === '') {
+        return data;
+      }
+
+      // Search term normalization
+      const searchTerm = params.term.toLowerCase();
+      
+      // Get user data from the option element
+      const $option = $(data.element);
+      const displayName = ($option.data('display-name') || data.text || '').toLowerCase();
+      const email = ($option.data('email') || data.id || '').toLowerCase();
+      
+      // Extract potential alias from email (part before @)
+      const alias = email.includes('@') ? email.split('@')[0] : '';
+      
+      // Check if search term matches any of: display name, email, or alias
+      const matchesDisplayName = displayName.indexOf(searchTerm) > -1;
+      const matchesEmail = email.indexOf(searchTerm) > -1;
+      const matchesAlias = alias.indexOf(searchTerm) > -1;
+      
+      if (matchesDisplayName || matchesEmail || matchesAlias) {
+        return data;
+      }
+
+      // Return null if no match found
+      return null;
+    }
   });
 }
 
