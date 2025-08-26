@@ -1441,6 +1441,7 @@ function populateAssignedToDropdown(users) {
     const currentUserOption = new Option(userDisplayName, userEmailId, true, true);
     $(currentUserOption).attr('data-user-id', 'current-user');
     $(currentUserOption).attr('data-display-name', userDisplayName);
+    $(currentUserOption).attr('data-email', userEmailId);
     $assignedToSelect.append(currentUserOption);
   }
 
@@ -1473,6 +1474,7 @@ function populateAssignedToDropdown(users) {
       const option = new Option(displayName, emailAddress);
       $(option).attr('data-user-id', userId);
       $(option).attr('data-display-name', displayName);
+      $(option).attr('data-email', emailAddress);
       $assignedToSelect.append(option);
     }
 
@@ -1538,24 +1540,23 @@ function initializeSelect2Dropdowns() {
 
 // Format user options with avatars
 function formatUserOption(user) {
-  
   if (!user.id) {
     return user.text;
   }
-  
   const $user = $(user.element);
   const userId = $user.data('user-id');
   const displayName = $user.data('display-name') || user.text;
-  
-  // Use cached avatar if available, else generated initials
-  let avatarUrl = avatarCache.get(userId) || createAvatarCanvas(displayName);
-  
-  return $(`
-    <div class="select2-user-option" data-user-id="${userId || ''}" data-display-name="${displayName}">
-      <img class="select2-user-image" src="${avatarUrl}" alt="${displayName}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;">
-      <span>${displayName}</span>
-    </div>
-  `);
+  const email = $user.data('email') || $user.val() || '';
+  const avatarUrl = avatarCache.get(userId) || createAvatarCanvas(displayName);
+  return $(
+    `<div class="select2-user-option" data-user-id="${userId || ''}" data-display-name="${displayName}">
+      <img class="select2-user-image" src="${avatarUrl}" alt="${displayName}" style="width:24px;height:24px;border-radius:50%;margin-right:8px;">
+      <div class="select2-user-text">
+        <div class="select2-user-name">${displayName}</div>
+        ${email ? `<div class=\"select2-user-email\">${email}</div>` : ''}
+      </div>
+    </div>`
+  );
 }
 
 // Format selected user with avatar
@@ -1938,4 +1939,207 @@ async function readJSONFileByNameFromPublicFolder(jsonFilePath) {
   } catch (error) {
     throw error; // Re-throw the error to propagate it
   }
+}
+
+// ================= Assignee (Org-wide search) Enhancements =================
+// Cache of original team members to allow reverting when query is short
+let teamMembersSnapshot = [];
+// Simple in-memory cache for org-wide search results (query -> users array)
+const orgUserSearchCache = new Map();
+// Debounce timer id
+let assigneeSearchDebounce = null;
+// Track last applied query to avoid redundant DOM work
+let lastAssigneeAppliedQuery = '';
+
+// Clean up avatar cache (referenced in eventHandlers.js)
+function cleanupAvatarCache() {
+  try { avatarCache.clear(); } catch (_) {}
+}
+
+// Wrap populateAssignedToDropdown to also snapshot team members once (only when called from team fetch)
+const _origPopulateAssignedToDropdown = populateAssignedToDropdown;
+populateAssignedToDropdown = function(users) { // eslint-disable-line no-global-assign
+  _origPopulateAssignedToDropdown(users);
+  // Build snapshot of valid users (exclude placeholder & current user duplication rules mirror original filtering)
+  if (Array.isArray(users)) {
+    const filtered = users.filter(u => {
+      const identity = u.identity;
+      return identity && identity.displayName && identity.uniqueName && emailRegex.test(identity.uniqueName) && (!u.isContainer || u.isContainer === false) && !identity.displayName.toLowerCase().includes('[service]') && !identity.displayName.toLowerCase().includes('[inactive]');
+    }).map(u => ({
+      id: u.identity.id,
+      displayName: u.identity.displayName,
+      email: u.identity.uniqueName
+    }));
+    teamMembersSnapshot = filtered;
+  }
+};
+
+// Build option elements for the assignee select from generic user objects
+function rebuildAssigneeOptionsFromGenericUsers(users, { preserveSelection = true, isOrgSearch = false } = {}) {
+  const $assignedToSelect = getAssignedToSelect();
+  if (!$assignedToSelect.length) return;
+  const currentVal = $assignedToSelect.val();
+  // Remove all except placeholder
+  $assignedToSelect.find('option:not(:first)').remove();
+
+  // Always add current user first if available (so they can quickly pick themselves)
+  if (userDisplayName && userEmailId) {
+    const currentUserOption = new Option(userDisplayName + ' (You)', userEmailId, false, false);
+    $(currentUserOption).attr('data-user-id', 'current-user');
+    $(currentUserOption).attr('data-display-name', userDisplayName);
+    $assignedToSelect.append(currentUserOption);
+  }
+
+  // Sort users by display name
+  const deduped = [];
+  const seenEmails = new Set();
+  for (const u of users) {
+    if (!u || !u.email || seenEmails.has(u.email) || u.email === userEmailId) continue;
+    seenEmails.add(u.email);
+    deduped.push(u);
+  }
+  deduped.sort((a,b)=> a.displayName.localeCompare(b.displayName));
+  for (const u of deduped) {
+    const opt = new Option(u.displayName, u.email, false, false);
+    $(opt).attr('data-user-id', u.id || '');
+    $(opt).attr('data-display-name', u.displayName);
+  $(opt).attr('data-email', u.email);
+    if (isOrgSearch) { $(opt).attr('data-source', 'org'); } else { $(opt).attr('data-source', 'team'); }
+    $assignedToSelect.append(opt);
+  }
+
+  // Restore selection if still present
+  if (preserveSelection && currentVal && seenEmails.has(currentVal)) {
+    $assignedToSelect.val(currentVal);
+  } else if (preserveSelection && currentVal && currentVal === userEmailId) {
+    $assignedToSelect.val(currentVal);
+  } else {
+    // leave unselected (placeholder) if selection disappeared
+    $assignedToSelect.val($assignedToSelect.val());
+  }
+  $assignedToSelect.trigger('change.select2');
+  // Update avatars (some may be new) after slight delay
+  setTimeout(()=> updateAssigneeDropdownAvatars(), 50);
+}
+
+// Perform organization-wide search for users whose display name or email matches query
+async function searchOrganizationUsers(query) {
+  const organization = $('#organization-select').val();
+  if (!organization || !query) return [];
+  const normalized = query.trim().toLowerCase();
+  if (orgUserSearchCache.has(normalized)) {
+    return orgUserSearchCache.get(normalized);
+  }
+  try {
+    const authHeaders = await generateAuthHeaders(usePAT);
+    authHeaders['Content-Type'] = 'application/json';
+    // Prefer subjectquery (Graph) API
+    const response = await fetch(`https://vssps.dev.azure.com/${organization}/_apis/graph/subjectquery?api-version=7.1-preview.1`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({ query, subjectKind: ['User'] })
+    });
+    let users = [];
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data.value)) {
+        users = data.value.map(u => ({
+          id: u.descriptor || u.originId || u.id,
+          displayName: u.displayName || u.principalName || u.mailAddress || 'Unknown User',
+          email: u.mailAddress || u.principalName || ''
+        })).filter(u => u.email && emailRegex.test(u.email));
+      }
+    } else {
+      // Fallback to identity picker (GET) if subjectquery not permitted
+      const fallbackResp = await fetch(`https://vssps.dev.azure.com/${organization}/_apis/IdentityPicker/Identities?searchFilter=General&filterValue=${encodeURIComponent(query)}&queryMembership=None&api-version=7.1-preview.1`, { headers: authHeaders });
+      if (fallbackResp.ok) {
+        const fData = await fallbackResp.json();
+        if (Array.isArray(fData.results)) {
+          users = fData.results.flatMap(r => r.identities || []).map(i => ({
+            id: i.localId || i.originId || i.subjectDescriptor,
+            displayName: i.displayName,
+            email: i.signInAddress || i.mail || i.upn || ''
+          })).filter(u => u.email && emailRegex.test(u.email));
+        }
+      }
+    }
+    // Cache under normalized query
+    orgUserSearchCache.set(normalized, users);
+    return users;
+  } catch (e) {
+    console.warn('Org user search failed', e);
+    return [];
+  }
+}
+
+// Show/hide spinner inside open Select2 results (assignee search)
+function showAssigneeLoadingIndicator() {
+  const $results = $('.select2-container--open .select2-results__options');
+  if (!$results.length) return;
+  if ($('#assignee-loading-indicator').length) return;
+  $results.prepend('<li class="select2-results__option select2-assignee-loading" id="assignee-loading-indicator" aria-disabled="true"><span class="spinner"></span><span> Searching directory...</span></li>');
+}
+function hideAssigneeLoadingIndicator() { $('#assignee-loading-indicator').remove(); }
+
+// Handle input changes in Select2 search field for assignee dropdown
+async function handleAssigneeSearchInput(rawQuery) {
+  const q = (rawQuery || '').trim();
+  // Thresholds: <2 chars -> revert to team members; >=4 -> org search; 2-3 -> no-op (keep current list)
+  if (q.length < 4) {
+    // For 0-1 chars: show full team list; for 2-3 chars: also revert to team list (previously left stale org results)
+    if (lastAssigneeAppliedQuery !== '__team__') {
+      rebuildAssigneeOptionsFromGenericUsers(teamMembersSnapshot, { preserveSelection: true, isOrgSearch: false });
+      lastAssigneeAppliedQuery = '__team__';
+    }
+    // Re-run local filtering so Select2 narrows on current query (q may be 0-3 chars)
+    const $selectLocal = $('#assigned-to-select');
+    const instLocal = $selectLocal.data('select2');
+    if (instLocal && instLocal.isOpen && instLocal.isOpen()) {
+      try {
+        instLocal.trigger('query', { term: q });
+        setTimeout(()=> {
+          const $sf2 = $('.select2-container--open .select2-search__field');
+          if ($sf2.length) { $sf2.val(q); }
+        },0);
+      } catch (_) {
+        $selectLocal.trigger('change.select2');
+      }
+    }
+    return; // Done for <4 characters
+  }
+  if (q === lastAssigneeAppliedQuery) return; // Already applied
+
+  // Show inline spinner (list item)
+  showAssigneeLoadingIndicator();
+
+  const $assignedToSelect = getAssignedToSelect();
+
+  const users = await searchOrganizationUsers(q);
+  hideAssigneeLoadingIndicator();
+  rebuildAssigneeOptionsFromGenericUsers(users, { preserveSelection: true, isOrgSearch: true });
+  lastAssigneeAppliedQuery = q;
+  // Smoothly refresh results without closing the dropdown (avoids focus glitch)
+  const $select = $('#assigned-to-select');
+  const select2Instance = $select.data('select2');
+  if (select2Instance && select2Instance.isOpen && select2Instance.isOpen()) {
+    try {
+      // Re-run query pipeline so Select2 re-filters against newly injected <option>s
+      select2Instance.trigger('query', { term: q });
+      setTimeout(() => {
+        const $sf = $('.select2-container--open .select2-search__field');
+        if ($sf.length) { $sf.val(q); }
+      }, 0);
+    } catch (e) {
+      // Fallback: minimal change trigger (should not steal focus)
+      $select.trigger('change.select2');
+    }
+  }
+}
+
+// Debounced wrapper exposed globally for eventHandlers to call
+function debouncedAssigneeSearch(rawQuery) {
+  clearTimeout(assigneeSearchDebounce);
+  assigneeSearchDebounce = setTimeout(() => {
+    handleAssigneeSearchInput(rawQuery);
+  }, 350); // 350ms debounce
 }

@@ -95,6 +95,11 @@
   margin-right: 8px;
 }
 
+/* Assignee dropdown: stacked name + email */
+.select2-user-option .select2-user-text { display:flex; flex-direction:column; line-height:1.1; }
+.select2-user-option .select2-user-name { font-weight:500; }
+.select2-user-option .select2-user-email { font-size:0.75rem; color:#666; }
+
 /* Increase dropdown height to show more options */
 .select2-dropdown .select2-results {
   max-height: 400px !important; /* Increased from default ~200px */
@@ -957,3 +962,8 @@ body.plain-text-mode .task-description:focus {
 @keyframes frgFade { from { opacity:0;} to { opacity:1;} }
 @keyframes frgBar { 0% { background-position:0 0;} 100% { background-position:200% 0;} }
 @keyframes frgPulse { 0% { box-shadow: 0 0 0 3px #2563eb80, 0 0 0 6px #ffffff40; } 50% { box-shadow: 0 0 0 5px #2563ebaa, 0 0 0 10px #ffffff10; } 100% { box-shadow: 0 0 0 3px #2563eb80, 0 0 0 6px #ffffff40; } }
+
+/* Assignee dropdown inline loading spinner */
+.select2-assignee-loading { display:flex; align-items:center; gap:8px; font-size:0.85rem; color:#555; }
+.select2-assignee-loading .spinner { width:16px; height:16px; border:2px solid #cfd3d7; border-top-color:#2563eb; border-radius:50%; animation: assigneeSpin .6s linear infinite; }
+@keyframes assigneeSpin { to { transform: rotate(360deg); } }

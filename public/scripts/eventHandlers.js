@@ -73,6 +73,21 @@ $(document).ready(function() {
       setTimeout(() => {
         updateAssigneeDropdownAvatars();
       }, 200);
+
+      // Attach input listener to the Select2 search field for assignee org-wide search
+      setTimeout(() => {
+        const $searchField = $('.select2-container--open .select2-search__field');
+        if ($searchField.length) {
+          // Remove previous handler to avoid duplicates
+            $searchField.off('input.assigneeSearch keyup.assigneeSearch');
+            $searchField.on('input.assigneeSearch keyup.assigneeSearch', function(ev) {
+              const val = $(this).val();
+              if (typeof debouncedAssigneeSearch === 'function') {
+                debouncedAssigneeSearch(val);
+              }
+            });
+        }
+      }, 50);
     }
   });
 });
