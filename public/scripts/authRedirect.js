@@ -85,7 +85,9 @@ function signOut() {
   const logoutRequest = {
     account: myMSALObj.getAccountByUsername(username),
   };
-  window.appInsights.clearAuthenticatedUserContext();
+  if (window.appInsights) {
+    window.appInsights.clearAuthenticatedUserContext();
+  }
   myMSALObj.logout(logoutRequest);
 }
 

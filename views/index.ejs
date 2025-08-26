@@ -52,8 +52,10 @@
   <div class="container app-root-hidden" id="app-root">
     <form id="feature-form" autocomplete="off" autocapitalize="off" spellcheck="false">
       <!-- Autofill mitigation: hidden username/password fields to discourage password managers -->
-      <input type="text" name="fake-username" autocomplete="username" style="display:none" aria-hidden="true" tabindex="-1">
-      <input type="password" name="fake-password" autocomplete="new-password" style="display:none" aria-hidden="true" tabindex="-1">
+      <input type="text" name="fake-username" autocomplete="username" style="display:none" aria-hidden="true"
+        tabindex="-1">
+      <input type="password" name="fake-password" autocomplete="new-password" style="display:none" aria-hidden="true"
+        tabindex="-1">
 
       <h3 style="display: flex; align-items: center;">
         <img src="images/organization.webp" alt="Work Item Icon" class="icon">
@@ -62,15 +64,18 @@
       <hr>
       <small class="form-text text-muted">Choices are curated based on your access</small>
       <div class="form-group mb-3 d-flex">
-  <select class="form-control" id="organization-select" style="flex: 1;" autocomplete="off" data-lpignore="true" aria-autocomplete="none">
+        <select class="form-control" id="organization-select" style="flex: 1;" autocomplete="off" data-lpignore="true"
+          aria-autocomplete="none">
           <option value="" disabled selected>Select an Organization</option>
         </select>
-        
-  <select class="form-control ms-2" id="project-select" disabled style="flex: 1;" autocomplete="off" data-lpignore="true" aria-autocomplete="none">
+
+        <select class="form-control ms-2" id="project-select" disabled style="flex: 1;" autocomplete="off"
+          data-lpignore="true" aria-autocomplete="none">
           <option value="" disabled selected>Select a Project</option>
         </select>
-        
-  <select class="form-control ms-2" id="team-select" disabled style="flex: 1;" autocomplete="off" data-lpignore="true" aria-autocomplete="none">
+
+        <select class="form-control ms-2" id="team-select" disabled style="flex: 1;" autocomplete="off"
+          data-lpignore="true" aria-autocomplete="none">
           <option value="" disabled selected>Select a Team</option>
         </select>
       </div>
@@ -85,13 +90,15 @@
         <div style="display: flex; gap: 10px;">
           <!-- Feature ID Input -->
           <div style="flex: 1; display: flex; flex-direction: column;">
-            <small class="form-text text-muted">Existing parent Work Item (e.g., Feature) to link new Work Item(s) (optional)</small>
+            <small class="form-text text-muted">Existing parent Work Item (e.g., Feature) to link new Work Item(s)
+              (optional)</small>
             <input type="number" class="form-control" id="feature-id" placeholder="Parent Work Item Id">
           </div>
           <!-- Assignee Input -->
           <div style="flex: 1; display: flex; flex-direction: column;">
             <small class="form-text text-muted">Assignee for the new Work Item(s)</small>
-            <select class="form-control" id="assigned-to-select" required disabled style="width: 100%;" autocomplete="off" data-lpignore="true" aria-autocomplete="none">
+            <select class="form-control" id="assigned-to-select" required disabled style="width: 100%;"
+              autocomplete="off" data-lpignore="true" aria-autocomplete="none">
               <option value="" disabled selected>Select an Assignee</option>
             </select>
           </div>
@@ -126,7 +133,8 @@
         <div class="d-flex gap-3">
           <div class="flex-grow-1">
             <small class="form-text text-muted">Select Work Item Type</small>
-            <select class="form-control" id="work-item-type-select" disabled required autocomplete="off" data-lpignore="true" aria-autocomplete="none">
+            <select class="form-control" id="work-item-type-select" disabled required autocomplete="off"
+              data-lpignore="true" aria-autocomplete="none">
               <option value="" disabled selected>Select a Work Item Type</option>
             </select>
           </div>
@@ -159,7 +167,8 @@
                   style="flex: 1;" readonly disabled>
                 <input type="text" class="form-control deliverable-title" placeholder="Work Item Title" required
                   style="flex: 2;">
-                <button type="button" class="btn description-toggle-btn" data-target="deliverable-description" title="Toggle Description">
+                <button type="button" class="btn description-toggle-btn" data-target="deliverable-description"
+                  title="Toggle Description">
                   <i class="fas fa-caret-down description-caret"></i>
                 </button>
                 <div class="input-group-append">
@@ -170,21 +179,31 @@
               </div>
               <div class="description-section" id="deliverable-description" style="display: none;">
                 <div class="rich-text-toolbar mt-2">
-                  <button type="button" class="toolbar-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
-                  <button type="button" class="toolbar-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
-                  <button type="button" class="toolbar-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                  <button type="button" class="toolbar-btn" data-command="bold" title="Bold"><i
+                      class="fas fa-bold"></i></button>
+                  <button type="button" class="toolbar-btn" data-command="italic" title="Italic"><i
+                      class="fas fa-italic"></i></button>
+                  <button type="button" class="toolbar-btn" data-command="underline" title="Underline"><i
+                      class="fas fa-underline"></i></button>
                   <span class="toolbar-separator">|</span>
-                  <button type="button" class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
-                  <button type="button" class="toolbar-btn" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                  <button type="button" class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List"><i
+                      class="fas fa-list-ul"></i></button>
+                  <button type="button" class="toolbar-btn" data-command="insertOrderedList" title="Numbered List"><i
+                      class="fas fa-list-ol"></i></button>
                   <span class="toolbar-separator">|</span>
-                  <button type="button" class="toolbar-btn image-btn" title="Insert Image"><i class="fas fa-image"></i></button>
+                  <button type="button" class="toolbar-btn image-btn" title="Insert Image"><i
+                      class="fas fa-image"></i></button>
                   <span class="toolbar-separator">|</span>
-                  <button type="button" class="toolbar-btn expand-btn" title="Expand/Collapse Width"><i class="fas fa-expand-arrows-alt"></i></button>
+                  <button type="button" class="toolbar-btn expand-btn" title="Expand/Collapse Width"><i
+                      class="fas fa-expand-arrows-alt"></i></button>
                   <span class="toolbar-separator">|</span>
-                  <button type="button" class="toolbar-btn" data-command="removeFormat" title="Clear Formatting"><i class="fas fa-remove-format"></i></button>
+                  <button type="button" class="toolbar-btn" data-command="removeFormat" title="Clear Formatting"><i
+                      class="fas fa-remove-format"></i></button>
                   <input type="file" class="image-input" accept="image/*" style="display: none;">
                 </div>
-                <div class="form-control deliverable-description rich-text-editor" contenteditable="true" data-placeholder="Work Item Description (optional)" style="min-height: 80px; max-height: 200px; overflow-y: auto;"></div>
+                <div class="form-control deliverable-description rich-text-editor" contenteditable="true"
+                  data-placeholder="Work Item Description (optional)"
+                  style="min-height: 80px; max-height: 200px; overflow-y: auto;"></div>
               </div>
             </div>
             <div class="form-group">
@@ -196,8 +215,10 @@
                     <input type="text" class="form-control task-title" placeholder="Task Title"
                       style="flex: 1 1 calc(85% - 5px);">
                     <input type="number" class="form-control task-estimate" placeholder="Estimate" min="0" max="100"
-                      step="0.01" title="Enter a numeric estimate (decimals allowed, e.g. 0.1)" style="flex: 1 1 calc(15% - 5px);">
-                    <button type="button" class="btn description-toggle-btn" data-target="task-description" title="Toggle Description">
+                      step="0.01" title="Enter a numeric estimate (decimals allowed, e.g. 0.1)"
+                      style="flex: 1 1 calc(15% - 5px);">
+                    <button type="button" class="btn description-toggle-btn" data-target="task-description"
+                      title="Toggle Description">
                       <i class="fas fa-caret-down description-caret"></i>
                     </button>
                     <div class="input-group-append delete-task-container">
@@ -206,21 +227,31 @@
                   </div>
                   <div class="description-section" id="task-description" style="display: none;">
                     <div class="rich-text-toolbar mt-2">
-                      <button type="button" class="toolbar-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
-                      <button type="button" class="toolbar-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
-                      <button type="button" class="toolbar-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                      <button type="button" class="toolbar-btn" data-command="bold" title="Bold"><i
+                          class="fas fa-bold"></i></button>
+                      <button type="button" class="toolbar-btn" data-command="italic" title="Italic"><i
+                          class="fas fa-italic"></i></button>
+                      <button type="button" class="toolbar-btn" data-command="underline" title="Underline"><i
+                          class="fas fa-underline"></i></button>
                       <span class="toolbar-separator">|</span>
-                      <button type="button" class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
-                      <button type="button" class="toolbar-btn" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                      <button type="button" class="toolbar-btn" data-command="insertUnorderedList"
+                        title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                      <button type="button" class="toolbar-btn" data-command="insertOrderedList"
+                        title="Numbered List"><i class="fas fa-list-ol"></i></button>
                       <span class="toolbar-separator">|</span>
-                      <button type="button" class="toolbar-btn image-btn" title="Insert Image"><i class="fas fa-image"></i></button>
+                      <button type="button" class="toolbar-btn image-btn" title="Insert Image"><i
+                          class="fas fa-image"></i></button>
                       <span class="toolbar-separator">|</span>
-                      <button type="button" class="toolbar-btn expand-btn" title="Expand/Collapse Width"><i class="fas fa-expand-arrows-alt"></i></button>
+                      <button type="button" class="toolbar-btn expand-btn" title="Expand/Collapse Width"><i
+                          class="fas fa-expand-arrows-alt"></i></button>
                       <span class="toolbar-separator">|</span>
-                      <button type="button" class="toolbar-btn" data-command="removeFormat" title="Clear Formatting"><i class="fas fa-remove-format"></i></button>
+                      <button type="button" class="toolbar-btn" data-command="removeFormat" title="Clear Formatting"><i
+                          class="fas fa-remove-format"></i></button>
                       <input type="file" class="image-input" accept="image/*" style="display: none;">
                     </div>
-                    <div class="form-control task-description rich-text-editor" contenteditable="true" data-placeholder="Task Description (optional)" style="min-height: 60px; max-height: 150px; overflow-y: auto;"></div>
+                    <div class="form-control task-description rich-text-editor" contenteditable="true"
+                      data-placeholder="Task Description (optional)"
+                      style="min-height: 60px; max-height: 150px; overflow-y: auto;"></div>
                   </div>
                 </li>
               </ul>
@@ -340,7 +371,8 @@
   </div>
 
   <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.14.2/js/msal-browser.min.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk.js"></script>
+  <script type="text/javascript"
+    src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk.js"></script>
   <script type="text/javascript" src="work_item_templates/work_item_templates_index.js"></script>
   <script type="text/javascript" src="scripts/authConfig.js"></script>
   <script type="text/javascript" src="scripts/richTextEditor.js"></script>
