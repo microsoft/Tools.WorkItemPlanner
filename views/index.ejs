@@ -83,7 +83,7 @@
 
       <h3 style="display: flex; align-items: center;">
         <img src="images/trophy.webp" alt="Parent Work Item Icon" class="icon">
-        <span>Parent Work Item</span>
+        <span>Execution Plan</span>
       </h3>
       <hr>
       <div class="form-group">
@@ -99,7 +99,7 @@
             <small class="form-text text-muted">Assignee for the new Work Item(s)</small>
             <select class="form-control" id="assigned-to-select" required disabled style="width: 100%;"
               autocomplete="off" data-lpignore="true" aria-autocomplete="none">
-              <option value="" disabled selected>Select an Assignee</option>
+              <option value="" disabled selected>Assignee</option>
             </select>
           </div>
         </div>
@@ -129,18 +129,19 @@
         <span>New Work Item(s)</span>
       </h3>
       <hr>
-      <div class="form-group row align-items-center" style="margin-top: 20px;">
-        <div class="d-flex gap-3">
-          <div class="flex-grow-1">
-            <small class="form-text text-muted">Select Work Item Type</small>
-            <select class="form-control" id="work-item-type-select" disabled required autocomplete="off"
-              data-lpignore="true" aria-autocomplete="none">
-              <option value="" disabled selected>Select a Work Item Type</option>
-            </select>
-          </div>
-          <div class="flex-grow-1">
-            <small class="form-text text-muted">Title prefix for Work Item(s) (optional)</small>
+      <div class="form-group" style="margin-top: 20px;">
+        <div style="display: flex; gap: 10px;">
+          <!-- Title Prefix Input -->
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <small class="form-text text-muted" style="margin-bottom:4px;">Title prefix for Work Item(s) (optional)</small>
             <input type="text" class="form-control" id="deliverable-prefix" placeholder="Work Item Title Prefix">
+          </div>
+          <!-- Work Item Type Select -->
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <small class="form-text text-muted" style="margin-bottom:4px;">Type of Work Item(s)</small>
+            <select class="form-control" id="work-item-type-select" disabled required autocomplete="off" data-lpignore="true" aria-autocomplete="none">
+              <option value="" disabled selected>Work Item Type</option>
+            </select>
           </div>
         </div>
         <div id="work-item-hierarchy" style="margin-bottom: 10px; display: none;" class="mt-2">
@@ -154,7 +155,7 @@
           </div>
         </div>
       </div>
-      <div style="margin-bottom: 20px;"></div>
+      <div style="margin-bottom: 30px;"></div>
 
       <h3 id="work-items-header">Work Items <span id="deliverable-count"></span></h3>
       <div id="deliverables-container" style="margin-top: 20px;">
