@@ -4,6 +4,8 @@ let userEmailId = "";
 let userDisplayName = "";
 // Flag: user has no accessible teams in selected project (fallback mode)
 let noTeamAccess = false;
+// Tracks whether the currently entered feature-id corresponds to a valid, retrievable work item
+let featureIdValid = false;
 
 // Regular expression to validate email addresses
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -575,8 +577,8 @@ async function createDeliverablesAndTasks(data) {
           path: "/fields/System.AssignedTo",
           value: selectedUserEmail,
         },
-        // Parent linkage only if a feature/parent id is provided
-        ...(featureIdVal ? [{
+  // Parent linkage only if a feature/parent id is provided AND previously validated
+  ...(featureIdVal && featureIdValid ? [{
           op: "add",
           path: "/relations/-",
           value: {
@@ -895,6 +897,7 @@ async function fetchFeatureDetails() {
       });
 
       if (response.ok) {
+        featureIdValid = true; // mark valid for linking
         return await response.json();
       } else {
         if (response.status == 404) {
@@ -905,6 +908,7 @@ async function fetchFeatureDetails() {
           $("#feature-id").addClass("is-invalid");
           $("#feature-name").text("");
           $("#feature-name").attr("href", "#");
+          featureIdValid = false; // invalid id; prevent linking
         } else {
           console.error("Error:", response.statusText);
           throw new Error("Network response was not ok");
@@ -912,8 +916,13 @@ async function fetchFeatureDetails() {
       }
     } catch (error) {
       console.error("Error:", error);
+      featureIdValid = false; // unknown error -> treat as invalid to avoid bad linkage attempts
       throw error;
     }
+  }
+  // If we get here without conditions, ensure flag false when no id provided
+  if (!featureId) {
+    featureIdValid = false;
   }
 }
 
@@ -1887,29 +1896,30 @@ async function fetchUserAvatar(userId, displayName) {
     return avatarCache.get(userId);
   }
 
-  // 1. Attempt direct identity image endpoint (works for interactive auth/cookie sessions)
-  //    This mirrors the "working reference" provided.
+  // 1. Attempt direct identity image endpoint with authentication
   const identityImageUrl = `https://dev.azure.com/${organization}/_api/_common/identityImage?id=${userId}&size=2`;
 
-  const tryDirectIdentityImage = () => new Promise((resolve) => {
-    const img = new Image();
-    let settled = false;
-    img.onload = () => { if (!settled) { settled = true; resolve(identityImageUrl); } };
-    img.onerror = () => { if (!settled) { settled = true; resolve(null); } };
-    img.src = identityImageUrl;
-    // Safety timeout
-    setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, 2000);
-  });
+  try {
+    const authHeaders = await generateAuthHeaders(usePAT);
+    const response = await fetch(identityImageUrl, {
+      method: 'GET',
+      headers: authHeaders
+    });
 
-  const directResult = await tryDirectIdentityImage();
-  if (directResult) {
-  avatarCache.set(userId, directResult);
-  return directResult;
+    if (response.ok) {
+      // Convert response to blob and create object URL
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      avatarCache.set(userId, objectUrl);
+      return objectUrl;
+    }
+  } catch (error) {
+    console.debug('Failed to fetch avatar image:', error);
   }
-
+  
   // 2. Final fallback: generated initials avatar (and cache)
   const generated = createAvatarCanvas(displayName);
-  avatarCache.set(userId, generated);
+  // avatarCache.set(userId, generated); Do not cache generated image
   return generated;
 }
 
@@ -2046,7 +2056,15 @@ let lastAssigneeAppliedQuery = '';
 
 // Clean up avatar cache (referenced in eventHandlers.js)
 function cleanupAvatarCache() {
-  try { avatarCache.clear(); } catch (_) {}
+  try { 
+    // Revoke object URLs to prevent memory leaks
+    avatarCache.forEach((url, userId) => {
+      if (typeof url === 'string' && url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+    });
+    avatarCache.clear(); 
+  } catch (_) {}
 }
 
 // Wrap populateAssignedToDropdown to also snapshot team members once (only when called from team fetch)

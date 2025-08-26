@@ -477,6 +477,7 @@ $(document).on("blur", "#feature-id", function () {
     //Clear the feature name
     $("#feature-name").text("");
     $("#feature-name").attr("href", "#");
+  if (typeof featureIdValid !== 'undefined') { featureIdValid = false; }
   } else {
     //Indicates that the user has updated the field. Attempt to fetch the feature details
     $("#feature-id").removeClass("is-invalid");
@@ -492,6 +493,7 @@ $(document).on("blur", "#feature-id", function () {
 
       // Call the Azure DevOps API to get feature details
       showLoadingIndicator("Fetching Work-Item Details...");
+  if (typeof featureIdValid !== 'undefined') { featureIdValid = false; } // pessimistically reset until validated
       fetchFeatureDetails(featureIdText, organization, project, true)
         .then((featureDetails) => {
           // Display the feature name in the feature ID field
