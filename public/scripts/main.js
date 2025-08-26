@@ -2,6 +2,8 @@ const token_key_name = "wpx_feature_planner_user_auth_token";
 let totalCalls = 0;
 let userEmailId = "";
 let userDisplayName = "";
+// Flag: user has no accessible teams in selected project (fallback mode)
+let noTeamAccess = false;
 
 // Regular expression to validate email addresses
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -184,7 +186,7 @@ function validateForm() {
     return;
   }
 
-  if (!team) {
+  if (!team && !noTeamAccess) {
     $("#team-select").addClass("is-invalid");
     isValid = false;
     showErrorPopup(
@@ -430,6 +432,36 @@ function showSuccessPopup(message) {
 
   // Remove the modal from the DOM once it is hidden to avoid duplication on subsequent calls
   $("#successModal").on("hidden.bs.modal", function () {
+    $(this).remove();
+  });
+}
+
+// Function to show an information popup (similar to success popup)
+function showInfoPopup(message) {
+  const modalId = `infoModal-${Date.now()}`;
+  const labelId = `${modalId}Label`;
+
+  const popupHTML = `
+      <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="${labelId}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="${labelId}"><i class="fas fa-info-circle"></i> Information</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              ${message}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+  $("body").append(popupHTML);
+  $(`#${modalId}`).modal("show");
+
+  // Remove the modal from the DOM once it is hidden to avoid duplication on subsequent calls
+  $(`#${modalId}`).on("hidden.bs.modal", function () {
     $(this).remove();
   });
 }
@@ -1273,19 +1305,35 @@ async function populateTeamProfile() {
 // Function to populate the "Team" dropdown
 function populateTeamDropdown(teams) {
   if (teams.length === 0) {
-    hideLoadingIndicator();
-    showErrorPopup("You do not have access to any <b>Team</b> in the selected <b>Project</b>. Select your <b>Project</b> from the dropdown.");
-  } else {
+    // Enter fallback mode: allow proceeding without team membership
+    noTeamAccess = true;
     clearTeamDropdown();
     const teamSelect = document.getElementById("team-select");
-
+    // Keep control disabled (no selectable team) but visually indicate fallback
+    const placeholder = teamSelect.options[0];
+    if (placeholder) {
+      placeholder.textContent = "No Teams (Proceed Without Team)";
+    }
+    // Immediately inform the user (don't block on Work Item Types fetch)
+    hideLoadingIndicator();
+    showInfoPopup("You are not a member of any <b>Team</b> in the selected <b>Project</b>. Automatic <b>Area Path</b> and <b>Iteration</b> suggestions are unavailable. Work Item Types are loading in the background. You can proceed now by: <ul><li>Manually entering the Area Path and Iteration</li><li>Selecting a Work Item Type (once loaded)</li><li>Choosing an Assignee (type 4+ characters to search the organization)</li></ul>");
+    // Kick off background fetch of work item types & enable assignee fallback immediately
+    enableAssigneeFallback();
+    fetchWorkItemTypes()
+      .catch(err => {
+        console.warn('Failed to fetch Work Item Types in no-team fallback', err);
+        showErrorPopup('Failed to load Work Item Types. Retry after selecting project again.');
+      });
+  } else {
+    noTeamAccess = false;
+    clearTeamDropdown();
+    const teamSelect = document.getElementById("team-select");
     teams.forEach((team) => {
       const option = document.createElement("option");
       option.value = team.id;
       option.textContent = team.name;
       teamSelect.appendChild(option);
     });
-
     teamSelect.disabled = false;
   }
 }
@@ -1423,6 +1471,22 @@ function clearAssignedToDropdown() {
     // Remove validation styling
     $assignedToSelect.removeClass('is-invalid');
   }
+}
+
+// Fallback: enable assignee dropdown even without team membership (org-wide search only)
+function enableAssigneeFallback() {
+  const $assignedToSelect = $("#assigned-to-select");
+  if (!$assignedToSelect.length) return;
+  // If already enabled & populated, skip
+  if (!$assignedToSelect.prop('disabled')) return;
+  // Ensure at least current user (if known) is available for quick selection
+  $assignedToSelect.find('option:not(:first)').remove();
+  if (userDisplayName && userEmailId) {
+    const opt = new Option(userDisplayName + ' (You)', userEmailId, true, true);
+    $(opt).attr('data-user-id','current-user').attr('data-display-name', userDisplayName).attr('data-email', userEmailId);
+    $assignedToSelect.append(opt);
+  }
+  $assignedToSelect.prop('disabled', false).trigger('change');
 }
 
 // Function to populate the "Assigned To" dropdown
