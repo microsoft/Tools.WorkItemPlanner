@@ -2039,7 +2039,7 @@ populateAssignedToDropdown = function(users) { // eslint-disable-line no-global-
 };
 
 // Build option elements for the assignee select from generic user objects
-function rebuildAssigneeOptionsFromGenericUsers(users, { preserveSelection = true, isOrgSearch = false } = {}) {
+function rebuildAssigneeOptionsFromGenericUsers(users, { preserveSelection = true, isOrgSearch = false, silent = false } = {}) {
   const $assignedToSelect = getAssignedToSelect();
   if (!$assignedToSelect.length) return;
   const currentVal = $assignedToSelect.val();
@@ -2081,7 +2081,9 @@ function rebuildAssigneeOptionsFromGenericUsers(users, { preserveSelection = tru
     // leave unselected (placeholder) if selection disappeared
     $assignedToSelect.val($assignedToSelect.val());
   }
-  $assignedToSelect.trigger('change.select2');
+  if (!silent) {
+    $assignedToSelect.trigger('change.select2');
+  }
   // Update avatars (some may be new) after slight delay
   setTimeout(()=> updateAssigneeDropdownAvatars(), 50);
 }
@@ -2146,13 +2148,26 @@ function showAssigneeLoadingIndicator() {
 function hideAssigneeLoadingIndicator() { $('#assignee-loading-indicator').remove(); }
 
 // Handle input changes in Select2 search field for assignee dropdown
+// Track async search requests to avoid race conditions (out-of-order resolution overwriting newer input)
+let lastAssigneeSearchRequestId = 0;
 async function handleAssigneeSearchInput(rawQuery) {
   const q = (rawQuery || '').trim();
+  const originalRaw = rawQuery || '';
+  // Capture current caret & value BEFORE we mutate DOM/options
+  const $preSearchField = $('.select2-container--open .select2-search__field');
+  let caretStart = null, caretEnd = null, preValue = null;
+  if ($preSearchField.length) {
+    preValue = $preSearchField.val();
+    if ($preSearchField[0].selectionStart != null) {
+      caretStart = $preSearchField[0].selectionStart;
+      caretEnd = $preSearchField[0].selectionEnd;
+    }
+  }
   // Thresholds: <2 chars -> revert to team members; >=4 -> org search; 2-3 -> no-op (keep current list)
   if (q.length < 4) {
     // For 0-1 chars: show full team list; for 2-3 chars: also revert to team list (previously left stale org results)
     if (lastAssigneeAppliedQuery !== '__team__') {
-      rebuildAssigneeOptionsFromGenericUsers(teamMembersSnapshot, { preserveSelection: true, isOrgSearch: false });
+      rebuildAssigneeOptionsFromGenericUsers(teamMembersSnapshot, { preserveSelection: true, isOrgSearch: false, silent: true });
       lastAssigneeAppliedQuery = '__team__';
     }
     // Re-run local filtering so Select2 narrows on current query (q may be 0-3 chars)
@@ -2160,44 +2175,67 @@ async function handleAssigneeSearchInput(rawQuery) {
     const instLocal = $selectLocal.data('select2');
     if (instLocal && instLocal.isOpen && instLocal.isOpen()) {
       try {
-        instLocal.trigger('query', { term: q });
-        setTimeout(()=> {
-          const $sf2 = $('.select2-container--open .select2-search__field');
-          if ($sf2.length) { $sf2.val(q); }
-        },0);
+        // Let Select2 internal filter handle current term without forcing value resets
+        instLocal.trigger('query', { term: originalRaw });
       } catch (_) {
         $selectLocal.trigger('change.select2');
       }
     }
+    // Restore caret if we captured it (DOM may have rebuilt)
+    setTimeout(()=> {
+      const $sf2 = $('.select2-container--open .select2-search__field');
+      if ($sf2.length && preValue !== null) {
+        // Only restore if user hasn't typed more meanwhile
+        if ($sf2.val() === preValue || $sf2.val() === originalRaw) {
+          if ($sf2[0].setSelectionRange && caretStart != null) {
+            try { $sf2[0].setSelectionRange(caretStart, caretEnd); } catch(_) {}
+          }
+        }
+      }
+    }, 0);
     return; // Done for <4 characters
   }
   if (q === lastAssigneeAppliedQuery) return; // Already applied
 
   // Show inline spinner (list item)
   showAssigneeLoadingIndicator();
+  const requestId = ++lastAssigneeSearchRequestId;
 
   const $assignedToSelect = getAssignedToSelect();
 
   const users = await searchOrganizationUsers(q);
   hideAssigneeLoadingIndicator();
-  rebuildAssigneeOptionsFromGenericUsers(users, { preserveSelection: true, isOrgSearch: true });
+  // If another newer request started since we kicked this off, abort applying stale results
+  if (requestId !== lastAssigneeSearchRequestId) {
+    return;
+  }
+  rebuildAssigneeOptionsFromGenericUsers(users, { preserveSelection: true, isOrgSearch: true, silent: true });
   lastAssigneeAppliedQuery = q;
   // Smoothly refresh results without closing the dropdown (avoids focus glitch)
   const $select = $('#assigned-to-select');
   const select2Instance = $select.data('select2');
   if (select2Instance && select2Instance.isOpen && select2Instance.isOpen()) {
     try {
-      // Re-run query pipeline so Select2 re-filters against newly injected <option>s
-      select2Instance.trigger('query', { term: q });
-      setTimeout(() => {
-        const $sf = $('.select2-container--open .select2-search__field');
-        if ($sf.length) { $sf.val(q); }
-      }, 0);
+      // Re-run query pipeline so Select2 re-filters against newly injected <option>s, preserving raw input
+      select2Instance.trigger('query', { term: originalRaw });
     } catch (e) {
       // Fallback: minimal change trigger (should not steal focus)
       $select.trigger('change.select2');
     }
   }
+  // Restore caret & input value (avoid overriding if user typed more during async call)
+  setTimeout(()=> {
+    const $sf = $('.select2-container--open .select2-search__field');
+    if ($sf.length) {
+      // If user hasn't changed the value (still matches original), keep it; otherwise don't touch
+      if ($sf.val() === preValue || $sf.val() === originalRaw) {
+        $sf.val(originalRaw);
+        if ($sf[0].setSelectionRange && caretStart != null) {
+          try { $sf[0].setSelectionRange(caretStart, caretEnd); } catch(_) {}
+        }
+      }
+    }
+  }, 0);
 }
 
 // Debounced wrapper exposed globally for eventHandlers to call
