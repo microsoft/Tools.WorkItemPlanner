@@ -20,9 +20,23 @@
 
     // Public API (global) so main.js can trigger once data/population done
     window.FirstRunGuide = {
-        maybeStart: function () {
-            // Always show (ignores stored completion when ALWAYS_SHOW_TOUR)
-            setTimeout(runTour, 800);
+        /**
+         * Start the guide. Accepts optional { delay: ms } to defer start slightly.
+         * Defaults to immediate start (0ms) to avoid perceived lag after loading indicator disappears.
+         */
+        maybeStart: function (opts = {}) {
+            if (hasCompleted()) return; // Respect stored completion when ALWAYS_SHOW_TOUR is false
+            const delay = typeof opts.delay === 'number' ? opts.delay : 0;
+            if (delay <= 0) {
+                // Run on next animation frame for layout stability
+                if (window.requestAnimationFrame) {
+                    requestAnimationFrame(() => runTour());
+                } else {
+                    runTour();
+                }
+            } else {
+                setTimeout(runTour, delay);
+            }
         },
         reset: function () { localStorage.removeItem(STORAGE_KEY); }
     };
@@ -83,6 +97,11 @@
                 selector: '#deliverables-container .deliverable-item:first-of-type .task-item:first-of-type .task-title',
                 title: 'Tasks',
                 body: 'Add Tasks under this Work Item.'
+            },
+            {
+                selector: '#deliverables-container .deliverable-item:first-of-type .task-item:first-of-type .task-estimate',
+                title: 'Estimate',
+                body: 'Enter the effort estimate (e.g. in Dev Days or your team\'s chosen unit). Supports decimals (e.g. 0.5). Totals roll up automatically.'
             },
             {
                 selector: '#add-deliverable',

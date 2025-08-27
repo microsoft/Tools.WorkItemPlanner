@@ -967,3 +967,7 @@ body.plain-text-mode .task-description:focus {
 .select2-assignee-loading { display:flex; align-items:center; gap:8px; font-size:0.85rem; color:#555; }
 .select2-assignee-loading .spinner { width:16px; height:16px; border:2px solid #cfd3d7; border-top-color:#2563eb; border-radius:50%; animation: assigneeSpin .6s linear infinite; }
 @keyframes assigneeSpin { to { transform: rotate(360deg); } }
+
+/* Header separator between help icon and profile picture */
+.header-separator { display:inline-block; width:1px; height:24px; background:#cfd3d8; margin:0 4px; }
+@media (max-width:600px){ .header-separator { height:20px; } }

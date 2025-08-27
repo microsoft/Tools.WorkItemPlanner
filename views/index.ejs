@@ -29,7 +29,12 @@
         <h1 style="margin: 5px 0; color: white;">Work Item Planner</h1>
       </div>
     </div>
-    <div class="user-info" id="user-info">
+    <div class="user-info" id="user-info" style="display:flex; align-items:center; gap:14px;">
+      <!-- Help / re-run guided tour button -->
+      <button id="help-tour-btn" type="button" title="Help / Guided Tour" aria-label="Help / Guided Tour" style="background:transparent; border:none; color:#fff; font-size:20px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:4px;">
+        <i class="fas fa-info-circle" style="filter: drop-shadow(0 0 2px rgba(0,0,0,.4));"></i>
+      </button>
+      <span class="header-separator" aria-hidden="true"></span>
       <div class="dropdown">
         <div id="profile-dropdown" class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
           aria-haspopup="true" aria-expanded="false" style="color: white;">

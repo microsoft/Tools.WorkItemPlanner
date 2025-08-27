@@ -92,9 +92,9 @@ async function onSuccessLogin() {
   initializeSelect2Dropdowns();
 
   hideLoadingIndicator();
-  // Trigger first run guide (if not completed before)
+  // Trigger first run guide ASAP (after layout); retry once if initial element not yet available
   if (window.FirstRunGuide && typeof window.FirstRunGuide.maybeStart === 'function') {
-    window.FirstRunGuide.maybeStart();
+    window.FirstRunGuide.maybeStart({ delay: 0 });
   }
 }
 

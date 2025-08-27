@@ -710,3 +710,16 @@ $(".logout-link").on("click", function (event) {
   event.preventDefault(); // Prevent the link from navigating to the href
   logout();
 });
+
+// Help / Guided Tour relaunch
+$(document).on('click', '#help-tour-btn', function(e) {
+  e.preventDefault();
+  try {
+    if (window.FirstRunGuide) {
+      if (typeof window.FirstRunGuide.reset === 'function') window.FirstRunGuide.reset();
+      if (typeof window.FirstRunGuide.maybeStart === 'function') window.FirstRunGuide.maybeStart({ delay: 0 });
+    }
+  } catch(err) {
+    console.warn('Failed to launch guided tour', err);
+  }
+});
