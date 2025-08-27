@@ -4,7 +4,10 @@
 // Create the main myMSALObj instance
 // Configuration parameters are located at config.js
 const myMSALObj = new msal.PublicClientApplication(msalConfig);
+// Expose for modules referencing window.myMSALObj (const/let not auto-attached to window)
+if(!window.myMSALObj){ window.myMSALObj = myMSALObj; }
 let username = "";
+window.getActiveUsername = () => username;
 
 /**
  * Handles successful login by setting the user context in App Insights.
@@ -31,7 +34,8 @@ function setUserAuthContext() {
     return;
   } else if (currentAccounts.length > 1) {
     console.warn("Multiple accounts detected. Choosing the account where username ends with @microsoft.com");
-    username = currentAccounts.filter((account) => account.username.endsWith("@microsoft.com")).username;
+    const preferred = currentAccounts.filter(a => a.username && a.username.endsWith('@microsoft.com'));
+    username = (preferred[0] || currentAccounts[0]).username;
   } else if (currentAccounts.length === 1) {
     console.log("Single account detected. Proceeding with that account.");
     username = currentAccounts[0].username;
