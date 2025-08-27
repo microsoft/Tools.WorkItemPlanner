@@ -598,6 +598,36 @@ async function createDeliverablesAndTasks(data) {
         });
       }
 
+      // If the selected work item type is Bug, some processes require additional required fields
+      // such as Repro Steps and custom summary fields (e.g., yammer_engineering.SummaryofIssue).
+      // Populate them from available data (prefer description, fallback to title) to satisfy validation.
+      try {
+        const witLower = (selectedWorkItemTypeName || '').toLowerCase();
+        if (witLower.indexOf('bug') !== -1) {
+          const reproValue = (deliverable.description && deliverable.description.trim()) ? deliverable.description : `Repro steps not provided for ${deliverable.title || 'issue'}`;
+          const summaryValue = (deliverable.title && deliverable.title.trim()) ? deliverable.title : (deliverable.description && deliverable.description.trim() ? (deliverable.description.substring(0, 200)) : 'Summary not provided');
+
+          // Microsoft.VSTS.TCM.ReproSteps (common field for bugs)
+          deliverableData.push({
+            op: "add",
+            path: "/fields/Microsoft.VSTS.TCM.ReproSteps",
+            value: reproValue,
+          });
+
+          // Custom field used in some processes (example from error). It's safe to add when present.
+          // Use a defensive try/catch because adding unknown custom fields doesn't break client-side code;
+          // server will ignore unknown fields or raise validation which will surface to user.
+          deliverableData.push({
+            op: "add",
+            path: "/fields/yammer_engineering.SummaryofIssue",
+            value: summaryValue,
+          });
+        }
+      } catch (e) {
+        // Swallow – best-effort population of Bug-specific fields; validation errors will be shown by server if still required
+        console.debug('Failed to attach Bug-specific fields:', e);
+      }
+
       currentDeliverableCount++;
       showLoadingIndicator(`Creating ${selectedWorkItemTypeName} : ${currentDeliverableCount} of ${data.deliverables.length}`);
       const createdDeliverableId = await createDeliverable(deliverableData);
