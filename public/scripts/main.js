@@ -1544,10 +1544,11 @@ function populateAssignedToDropdown(users) {
       const userId = user.identity.id;
       
       // Add to select with data attributes for avatar rendering
-      const option = new Option(displayName, emailAddress);
-      $(option).attr('data-user-id', userId);
-      $(option).attr('data-display-name', displayName);
-      $(option).attr('data-email', emailAddress);
+  const option = new Option(displayName, emailAddress);
+  $(option).attr('data-user-id', userId);
+  $(option).attr('data-display-name', displayName);
+  $(option).attr('data-email', emailAddress);
+  $(option).attr('data-source', 'team');
       $assignedToSelect.append(option);
     }
 
@@ -1649,9 +1650,10 @@ function formatUserOption(user) {
   const userId = $user.data('user-id');
   const displayName = $user.data('display-name') || user.text;
   const email = $user.data('email') || $user.val() || '';
+  const source = $user.data('source') || 'team';
   const avatarUrl = avatarCache.get(userId) || createAvatarCanvas(displayName);
   return $(
-    `<div class="select2-user-option" data-user-id="${userId || ''}" data-display-name="${displayName}">
+    `<div class="select2-user-option" data-user-id="${userId || ''}" data-display-name="${displayName}" data-source="${source}">
       <img class="select2-user-image" src="${avatarUrl}" alt="${displayName}" style="width:24px;height:24px;border-radius:50%;margin-right:8px;">
       <div class="select2-user-text">
         <div class="select2-user-name">${displayName}</div>
@@ -1670,11 +1672,12 @@ function formatUserSelection(user) {
   const $user = $(user.element);
   const userId = $user.data('user-id');
   const displayName = $user.data('display-name') || user.text;
+  const source = $user.data('source') || 'team';
   
   let avatarUrl = avatarCache.get(userId) || createAvatarCanvas(displayName);
   // Kick off fetch only if not cached (will update all rendered instances once loaded)
   if (!avatarCache.has(userId) && userId && userId !== 'current-user') {
-    fetchUserAvatar(userId, displayName).then(real => {
+    fetchUserAvatar(userId, displayName, { source }).then(real => {
       avatarCache.set(userId, real);
       // Update any rendered selection image
       $('.select2-user-image').filter(`[data-user-id="${userId}"]`).attr('src', real);
@@ -1884,8 +1887,68 @@ function createAvatarCanvas(displayName, size = 24) {
 // In-memory avatar cache (userId -> dataURL/URL)
 const avatarCache = new Map();
 
-// Function to fetch user avatar (direct identityImage with caching, then fallback to generated initials)
-async function fetchUserAvatar(userId, displayName) {
+// Attempt to fetch avatar via Graph Subjects endpoint (descriptors or IDs).
+// Returns object URL string on success, or null on failure.
+async function tryFetchGraphAvatar(organization, userId, size, usePATFlag) {
+  try {
+    if (!organization || !userId) return null;
+    const graphUrl = `https://vssps.dev.azure.com/${organization}/_apis/graph/Subjects/${encodeURIComponent(userId)}/avatars?size=${encodeURIComponent(size)}&api-version=7.1`;
+    const authHeaders = await generateAuthHeaders(usePATFlag);
+    authHeaders['Accept'] = 'application/octet-stream';
+    const resp = await fetch(graphUrl, { method: 'GET', headers: authHeaders });
+    if (!resp.ok) return null;
+    const ct = (resp.headers.get('content-type') || '').toLowerCase();
+    let objectUrl = null;
+    if (ct.includes('application/json')) {
+      // JSON envelope with base64 encoded PNG
+      const data = await resp.json();
+      if (data && data.value) {
+        try {
+          const binary = atob(data.value);
+          const len = binary.length;
+          const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+          const blob = new Blob([bytes], { type: 'image/png' });
+          objectUrl = URL.createObjectURL(blob);
+        } catch (e) {
+          console.debug('Graph avatar base64 decode failed', e);
+        }
+      }
+    } else {
+      // Binary path
+      const blob = await resp.blob();
+      objectUrl = URL.createObjectURL(blob);
+    }
+    return objectUrl;
+  } catch (e) {
+    console.debug('Graph avatar fetch failed', e);
+    return null;
+  }
+}
+
+// Attempt to fetch avatar via legacy identityImage endpoint.
+// Returns object URL string on success, or null on failure.
+async function tryFetchLegacyIdentityAvatar(organization, userId, usePATFlag) {
+  try {
+    if (!organization || !userId) return null;
+    const identityImageUrl = `https://dev.azure.com/${organization}/_api/_common/identityImage?id=${encodeURIComponent(userId)}&size=2`;
+    const authHeaders = await generateAuthHeaders(usePATFlag);
+    const resp = await fetch(identityImageUrl, { method: 'GET', headers: authHeaders });
+    if (!resp.ok) return null;
+    const blob = await resp.blob();
+    return URL.createObjectURL(blob);
+  } catch (e) {
+    console.debug('Legacy identityImage fetch failed', e);
+    return null;
+  }
+}
+
+// Function to fetch user avatar.
+// Order of attempts:
+// 1. Graph Subjects avatar endpoint (works with subjectquery descriptors + PAT/Bearer) -> binary image
+// 2. Legacy identityImage endpoint (may require cookie depending on auth mode)
+// 3. Generated initials avatar (data URL)
+async function fetchUserAvatar(userId, displayName, opts = {}) {
   const organization = $('#organization-select').val();
   if (!organization || !userId) {
     return createAvatarCanvas(displayName);
@@ -1896,28 +1959,32 @@ async function fetchUserAvatar(userId, displayName) {
     return avatarCache.get(userId);
   }
 
-  // 1. Attempt direct identity image endpoint with authentication
-  const identityImageUrl = `https://dev.azure.com/${organization}/_api/_common/identityImage?id=${userId}&size=2`;
+  const size = 'medium'; // requested logical size
+  const source = opts.source || 'team'; // 'team' or 'org'
 
-  try {
-    const authHeaders = await generateAuthHeaders(usePAT);
-    const response = await fetch(identityImageUrl, {
-      method: 'GET',
-      headers: authHeaders
-    });
-
-    if (response.ok) {
-      // Convert response to blob and create object URL
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      avatarCache.set(userId, objectUrl);
-      return objectUrl;
+  if (source === 'team') {
+    // Team members: use legacy identity image endpoint only
+    const legacyUrl = await tryFetchLegacyIdentityAvatar(organization, userId, usePAT);
+    if (legacyUrl) {
+      avatarCache.set(userId, legacyUrl);
+      return legacyUrl;
     }
-  } catch (error) {
-    console.debug('Failed to fetch avatar image:', error);
+  } else if (source === 'org') {
+    // Org-wide search results: use Graph endpoint only
+    const graphUrl = await tryFetchGraphAvatar(organization, userId, size, usePAT);
+    if (graphUrl) {
+      avatarCache.set(userId, graphUrl);
+      return graphUrl;
+    }
+  } else {
+    // Unknown source: fall back to previous dual-attempt strategy
+    const graphUrl = await tryFetchGraphAvatar(organization, userId, size, usePAT);
+    if (graphUrl) { avatarCache.set(userId, graphUrl); return graphUrl; }
+    const legacyUrl = await tryFetchLegacyIdentityAvatar(organization, userId, usePAT);
+    if (legacyUrl) { avatarCache.set(userId, legacyUrl); return legacyUrl; }
   }
   
-  // 2. Final fallback: generated initials avatar (and cache)
+  // 3. Final fallback: generated initials avatar (and cache)
   const generated = createAvatarCanvas(displayName);
   // avatarCache.set(userId, generated); Do not cache generated image
   return generated;
@@ -1930,9 +1997,10 @@ function updateAssigneeDropdownAvatars() {
     const $option = $(this);
     const userId = $option.attr('data-user-id');
     const displayName = $option.attr('data-display-name');
+    const source = $option.attr('data-source') || 'team';
     const $img = $option.find('.select2-user-image');
     if (userId && userId !== 'current-user' && $img.length > 0 && !avatarCache.has(userId)) {
-      fetchUserAvatar(userId, displayName).then(url => {
+      fetchUserAvatar(userId, displayName, { source }).then(url => {
         avatarCache.set(userId, url);
         $img.attr('src', url);
       }).catch(() => {});
@@ -1954,10 +2022,11 @@ function prefetchAssigneeAvatars(max = 40) {
     if (count >= max) return false; // break
     const userId = $(this).data('user-id');
     const displayName = $(this).data('display-name');
+  const source = $(this).data('source') || 'team';
     if (userId && userId !== 'current-user' && !avatarCache.has(userId)) {
       // Stagger requests slightly
       setTimeout(() => {
-        fetchUserAvatar(userId, displayName).catch(()=>{});
+    fetchUserAvatar(userId, displayName, { source }).catch(()=>{});
       }, count * 50); // 50ms spacing
       count++;
     }
