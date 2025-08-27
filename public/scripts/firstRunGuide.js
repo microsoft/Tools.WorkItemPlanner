@@ -64,14 +64,14 @@
                 body: 'Pick who will be assigned to the created Work Items.'
             },
             {
-                selector: '#work-item-type-select',
-                title: 'Work Item Type',
-                body: 'Select the type for new Work Items (e.g. User Story, Bug).'
-            },
-            {
                 selector: '#deliverable-prefix',
                 title: 'Title Prefix (Optional)',
                 body: 'Enter a prefix that will automatically prepend each new Work Item title (e.g. Sprint Tag, Feature Acronym). Leave blank if not needed.'
+            },
+            {
+                selector: '#work-item-type-select',
+                title: 'Work Item Type',
+                body: 'Select the type for new Work Items (e.g. User Story, Bug).'
             },
             {
                 // Use :first-of-type (':first' is invalid in querySelector)
