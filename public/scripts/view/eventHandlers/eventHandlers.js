@@ -1,12 +1,8 @@
 // Event handler document ready
 $(document).ready(function () {
   showLoadingIndicator();
-  if (!usePAT) {
-    console.log("Calling signIn");
-    signIn();
-  } else {
-    onSuccessLogin();
-  }
+  console.log("Initiating AAD sign-in");
+  signIn();
 });
 
 // Select2 specific event handlers for dropdown closing behavior
@@ -429,30 +425,6 @@ $(document).on("paste", ".task-estimate", function (event) {
 $("#deliverable-prefix").on("input", function () {
   const prefixValue = $(this).val();
   $(".deliverable-prefix").val(prefixValue);
-});
-
-// Event handler for submitting the PAT
-$(document).on("click", "#pat-submit", function () {
-  PAT = $("#pat-input").val();
-  if (PAT) {
-    storeTokenInLocalStorage(PAT);
-    closePatPopup();
-    loadUserProfile();
-  } else {
-    alert("Please enter a valid PAT.");
-  }
-});
-
-// Event handler for input in the PAT input field
-$(document).on("input", "#pat-input", function () {
-  const pat = $(this).val();
-  const $submitBtn = $("#pat-submit");
-
-  if (pat) {
-    $submitBtn.prop("disabled", false);
-  } else {
-    $submitBtn.prop("disabled", true);
-  }
 });
 
 $(document).on("blur", "#feature-id", function () {

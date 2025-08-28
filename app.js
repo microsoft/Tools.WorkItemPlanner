@@ -35,10 +35,6 @@ app.use(async (req, res, next) => {
   // const token = await getAccessToken();
   // console.log(token);
   // req.headers['Authorization'] = `Bearer ${token}`;
-
-  // Alt implementation:
-  // const token = await getAccessToken();
-  // req.headers['Authorization'] = "Basic "+ btoa('ADD A PAT HERE');
   next();
 });
 //#endregion

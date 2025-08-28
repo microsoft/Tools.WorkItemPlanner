@@ -1,4 +1,3 @@
-const token_key_name = "wpx_feature_planner_user_auth_token";
 let totalCalls = 0;
 let userEmailId = "";
 let userDisplayName = "";
@@ -34,17 +33,6 @@ async function delay(ms) {
 }
 
 async function onSuccessLogin() {
-  if (usePAT) {
-    // Attempt to read PAT
-    const token = getTokenFromLocalStorage();
-    if (!token) {
-      // Popup to read PAT
-      hideLoadingIndicator();
-      showPATPopup(false);
-      return;
-    }
-  }
-
   console.log("Login Complete");
   showLoadingIndicator();
 
@@ -290,60 +278,6 @@ function validateTask($taskTitleInput, $taskEstimateInput) {
   return isValidTitle && isValidEstimate;
 }
 
-/**
- * @deprecated Since version 1.3.1. Not in use. Switched to better approach of fetching profile and other data.
- */
-async function loadUserProfile() {
-  const organization = $("#organization-select").val();
-  const apiEndpoint = "https://dev.azure.com/" + organization + "/_apis/ConnectionData?api-version=1.0";
-  const authHeaders = await generateAuthHeaders(usePAT);
-  $.ajax({
-    url: apiEndpoint,
-    method: "GET",
-    headers: authHeaders,
-    success: function (data) {
-      if (data.authenticatedUser) {
-        if (usePAT) {
-          userDisplayName = data.authenticatedUser.providerDisplayName || "User";
-          userEmailId = authenticatedUser.properties.Account.$value;
-          displayUserName(userDisplayName);
-        } else {
-          // Display the profile picture instead
-
-          fetchUserProfileImage()
-            //.then(() => populateOrganizationsDropdown())
-            //.then(() => populateProjectsDropdown())
-            //.then(() => populateTeamProfile())
-            .then(() => hideLoadingIndicator())
-            .catch((error) => {
-              console.error("Error:", error);
-              hideLoadingIndicator();
-            });
-        }
-      } else {
-        if (usePAT) {
-          //Use PAT
-          showPATPopup(true);
-        } else {
-          //Use Access Token
-          console.log("User not authenticated");
-          showErrorPopup("User not authenticated. Reloading this page may fix the issue.");
-        }
-      }
-      return data;
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      if (jqXHR.status === 401) {
-        console.error("Unauthorized. Please check your authentication. Logging out the user");
-        logout();
-      } else {
-        console.log(errorThrown);
-        showErrorPopup("Error fetching user profile. Check console log.");
-      }
-    },
-  });
-}
-
 // Function to display progress bar
 function displayProgressBar() {
   $(".progress-bar-container").show();
@@ -492,9 +426,8 @@ async function createDeliverable(workItemData) {
   const organization = $("#organization-select").val();
   const project = $("#project-select").val();
   try {
-    let requestHeaders = await generateAuthHeaders(usePAT);
+    let requestHeaders = await generateAuthHeaders();
     requestHeaders["Content-Type"] = "application/json-patch+json";
-
     const response = await fetch(
       "https://dev.azure.com/" + organization + "/" + project + "/_apis/wit/workitems/$" + encodeURIComponent(selectedWorkItemTypeName) + "?api-version=7.0",
       {
@@ -503,8 +436,8 @@ async function createDeliverable(workItemData) {
         body: JSON.stringify(workItemData),
       }
     );
-
     const responseData = await response.json();
+
     return responseData.id;
   } catch (error) {
     console.log(error);
@@ -518,9 +451,8 @@ async function createTask(workItemData) {
   const organization = $("#organization-select").val();
   const project = $("#project-select").val();
   try {
-    let requestHeaders = await generateAuthHeaders(usePAT);
+    let requestHeaders = await generateAuthHeaders();
     requestHeaders["Content-Type"] = "application/json-patch+json";
-
     const response = await fetch(
       "https://dev.azure.com/" + organization + "/" + project + "/_apis/wit/workitems/$Task?api-version=7.0",
       {
@@ -529,8 +461,8 @@ async function createTask(workItemData) {
         body: JSON.stringify(workItemData),
       }
     );
-
     const responseData = await response.json();
+
     return responseData.id;
   } catch (error) {
     console.log(error);
@@ -694,7 +626,7 @@ async function createDeliverablesAndTasks(data) {
 async function getLinkedWorkItemsQuery(featureId) {
   const organization = $("#organization-select").val();
   const project = $("#project-select").val();
-  const authHeaders = await generateAuthHeaders(usePAT);
+  const authHeaders = await generateAuthHeaders();
   showLoadingIndicator("Almost done...");
 
   const queryData = {
@@ -739,8 +671,7 @@ async function getLinkedWorkItemsQuery(featureId) {
       throw new Error("Temporary query ID not found in response.");
     }
 
-    const queryUrl = `https://dev.azure.com/${organization}/${project}/_queries/query/?tempQueryId=${response.id}`;
-    return queryUrl;
+    return `https://dev.azure.com/${organization}/${project}/_queries/query/?tempQueryId=${response.id}`;
   } catch (error) {
     hideLoadingIndicator();
     console.error("Error creating temporary query", error);
@@ -807,6 +738,7 @@ function clearForm() {
 function resetDeliverableItems() {
   const $deliverableItems = $(".deliverable-item");
   $deliverableItems.find(".deliverable-title").val("");
+
   // Clear rich text editor content
   $deliverableItems.find(".deliverable-description").empty();
 
@@ -873,28 +805,12 @@ function stopProgressBar(isError) {
   progressBar.classList.remove("progress-bar-animated");
 }
 
-// Function to display PAT popup
-function showPATPopup(isRetryAttempt) {
-  if (isRetryAttempt == false) {
-    $("#pat-popup-invalid-p").hide();
-    $("#pat-popup-modal").modal("show");
-  } else {
-    $("#pat-popup-invalid-p").show();
-    $("#pat-popup-modal").modal("show");
-  }
-}
-
-// Function to close the PAT input popup
-function closePatPopup() {
-  $("#pat-popup-modal").modal("hide");
-}
-
 // Function to get feature details
 async function fetchFeatureDetails() {
   const featureId = $("#feature-id").val();
   const organization = $("#organization-select").val();
   const project = $("#project-select").val();
-  const headers = await generateAuthHeaders(usePAT);
+  const headers = await generateAuthHeaders();
 
   if (featureId && organization && project) {
     const url = `https://dev.azure.com/${organization}/${project}/_apis/wit/workitems/${featureId}?api-version=7.0`;
@@ -938,7 +854,7 @@ async function fetchFeatureDetails() {
 // Function to fetch the user's public alias
 async function fetchUserPublicAlias() {
   const url = `https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=7.0`;
-  const authHeaders = await generateAuthHeaders(usePAT);
+  const authHeaders = await generateAuthHeaders();
 
   try {
     const response = await $.ajax({
@@ -956,7 +872,7 @@ async function fetchUserPublicAlias() {
 // Function to fetch organizations the user has access to
 async function fetchUserOrganizations(publicAlias) {
   const url = `https://app.vssps.visualstudio.com/_apis/accounts?memberId=${publicAlias}&api-version=7.1`;
-  const authHeaders = await generateAuthHeaders(usePAT);
+  const authHeaders = await generateAuthHeaders();
 
   try {
     const response = await $.ajax({
@@ -1015,7 +931,7 @@ async function populateOrganizationsDropdown() {
 // Function to fetch projects from a given organization
 async function fetchProjectsForOrganization(organization) {
   const url = `https://dev.azure.com/${organization}/_apis/projects?api-version=7.0`;
-  const authHeaders = await generateAuthHeaders(usePAT);
+  const authHeaders = await generateAuthHeaders();
 
   try {
     const response = await $.ajax({
@@ -1080,23 +996,15 @@ async function populateProjectsDropdown() {
 }
 
 // Function to construct Auth Headers for Azure DevOps
-async function generateAuthHeaders(usePAT) {
+async function generateAuthHeaders() {
   const headers = {};
-
-  if (usePAT) {
-    authToken = getTokenFromLocalStorage();
-    const base64PAT = btoa(`:${authToken}`);
-    headers["Authorization"] = `Basic ${base64PAT}`;
-  } else {
-    try {
-      let accessToken = await getAccessToken();
-      headers["Authorization"] = `Bearer ${accessToken}`;
-    } catch (error) {
-      console.error("Error getting access token:", error);
-      throw error;
-    }
+  try {
+    const accessToken = await getAccessToken();
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  } catch (error) {
+    console.error("Error getting access token:", error);
+    throw error;
   }
-
   return headers;
 }
 
@@ -1290,7 +1198,7 @@ async function populateTeamProfile() {
   const project = $("#project-select").val();
   if (organization && project) {
     const url = `https://dev.azure.com/${organization}/_apis/projects/${project}/teams?api-version=7.0&$mine=true`;
-    const authHeaders = await generateAuthHeaders(usePAT);
+    const authHeaders = await generateAuthHeaders();
     return $.ajax({
       url: url,
       method: "GET",
@@ -1374,9 +1282,11 @@ async function fetchIterationsForTeam() {
   const organization = $("#organization-select").val();
   const project = $("#project-select").val();
   const team = $("#team-select").val();
+
   if (organization && project && team) {
     const url = `https://dev.azure.com/${organization}/${project}/${team}/_apis/work/teamsettings/iterations?api-version=7.0`;
-    const authHeaders = await generateAuthHeaders(usePAT);
+    const authHeaders = await generateAuthHeaders();
+
     return $.ajax({
       url: url,
       method: "GET",
@@ -1408,7 +1318,7 @@ async function fetchWorkItemTypes() {
 
   if (organization && project) {
     const url = `https://dev.azure.com/${organization}/${project}/_apis/wit/workitemtypes?api-version=7.0`;
-    const authHeaders = await generateAuthHeaders(usePAT);
+    const authHeaders = await generateAuthHeaders();
 
     return $.ajax({
       url: url,
@@ -1444,7 +1354,8 @@ async function fetchUsersInTeam() {
   if (organization && project && team) {
     // Use expandMembership=true to get all nested group members (Entra Groups, nested teams, etc.)
     const url = `https://dev.azure.com/${organization}/_apis/projects/${project}/teams/${team}/members?$expandMembership=true&api-version=7.0`;
-    const authHeaders = await generateAuthHeaders(usePAT);
+    const authHeaders = await generateAuthHeaders();
+
     return $.ajax({
       url: url,
       method: "GET",
@@ -1512,7 +1423,6 @@ function populateAssignedToDropdown(users) {
   clearAssignedToDropdown();
 
   const $assignedToSelect = $("#assigned-to-select");
-
   if (!$assignedToSelect.length) {
     console.error("Assigned to dropdown element not found");
     return;
@@ -1739,7 +1649,7 @@ async function fetchAreaPathsForTeam() {
   const team = $("#team-select").val();
   if (organization && project && team) {
     const url = `https://dev.azure.com/${organization}/${project}/${team}/_apis/work/teamsettings/teamfieldvalues?api-version=7.0`;
-    const authHeaders = await generateAuthHeaders(usePAT);
+    const authHeaders = await generateAuthHeaders();
     return $.ajax({
       url: url,
       method: "GET",
@@ -1928,11 +1838,11 @@ const avatarCache = new Map();
 
 // Attempt to fetch avatar via Graph Subjects endpoint (descriptors or IDs).
 // Returns object URL string on success, or null on failure.
-async function tryFetchGraphAvatar(organization, userId, size, usePATFlag) {
+async function tryFetchGraphAvatar(organization, userId, size) {
   try {
     if (!organization || !userId) return null;
     const graphUrl = `https://vssps.dev.azure.com/${organization}/_apis/graph/Subjects/${encodeURIComponent(userId)}/avatars?size=${encodeURIComponent(size)}&api-version=7.1`;
-    const authHeaders = await generateAuthHeaders(usePATFlag);
+    const authHeaders = await generateAuthHeaders();
     authHeaders['Accept'] = 'application/octet-stream';
     const resp = await fetch(graphUrl, { method: 'GET', headers: authHeaders });
     if (!resp.ok) return null;
@@ -1967,11 +1877,11 @@ async function tryFetchGraphAvatar(organization, userId, size, usePATFlag) {
 
 // Attempt to fetch avatar via legacy identityImage endpoint.
 // Returns object URL string on success, or null on failure.
-async function tryFetchLegacyIdentityAvatar(organization, userId, usePATFlag) {
+async function tryFetchLegacyIdentityAvatar(organization, userId) {
   try {
     if (!organization || !userId) return null;
     const identityImageUrl = `https://dev.azure.com/${organization}/_api/_common/identityImage?id=${encodeURIComponent(userId)}&size=2`;
-    const authHeaders = await generateAuthHeaders(usePATFlag);
+    const authHeaders = await generateAuthHeaders();
     const resp = await fetch(identityImageUrl, { method: 'GET', headers: authHeaders });
     if (!resp.ok) return null;
     const blob = await resp.blob();
@@ -2003,23 +1913,23 @@ async function fetchUserAvatar(userId, displayName, opts = {}) {
 
   if (source === 'team') {
     // Team members: use legacy identity image endpoint only
-    const legacyUrl = await tryFetchLegacyIdentityAvatar(organization, userId, usePAT);
+    const legacyUrl = await tryFetchLegacyIdentityAvatar(organization, userId);
     if (legacyUrl) {
       avatarCache.set(userId, legacyUrl);
       return legacyUrl;
     }
   } else if (source === 'org') {
     // Org-wide search results: use Graph endpoint only
-    const graphUrl = await tryFetchGraphAvatar(organization, userId, size, usePAT);
+    const graphUrl = await tryFetchGraphAvatar(organization, userId, size);
     if (graphUrl) {
       avatarCache.set(userId, graphUrl);
       return graphUrl;
     }
   } else {
     // Unknown source: fall back to previous dual-attempt strategy
-    const graphUrl = await tryFetchGraphAvatar(organization, userId, size, usePAT);
+    const graphUrl = await tryFetchGraphAvatar(organization, userId, size);
     if (graphUrl) { avatarCache.set(userId, graphUrl); return graphUrl; }
-    const legacyUrl = await tryFetchLegacyIdentityAvatar(organization, userId, usePAT);
+    const legacyUrl = await tryFetchLegacyIdentityAvatar(organization, userId);
     if (legacyUrl) { avatarCache.set(userId, legacyUrl); return legacyUrl; }
   }
 
@@ -2051,10 +1961,6 @@ function updateAssigneeDropdownAvatars() {
 
 // Prefetch avatars after dropdown population to reduce first-open lag
 function prefetchAssigneeAvatars(max = 40) {
-  if (typeof usePAT !== 'undefined' && usePAT) {
-    // Direct identity image likely won't work with PAT-only auth (no browser cookie); skip to avoid wasted requests
-    return;
-  }
   const $options = $('#assigned-to-select option');
   let count = 0;
   $options.each(function () {
@@ -2072,14 +1978,9 @@ function prefetchAssigneeAvatars(max = 40) {
   });
 }
 
-// Function to clear PAT from local storage and reload the page
+// Function to handle logout activities and sign-out the user
 function logout() {
-  if (usePAT) {
-    clearTokenFromLocalStorage();
-    window.location.reload();
-  } else {
-    signOut();
-  }
+  signOut();
 }
 
 let prefilCategoryChoice = "";
@@ -2252,7 +2153,7 @@ async function searchOrganizationUsers(query) {
     return orgUserSearchCache.get(normalized);
   }
   try {
-    const authHeaders = await generateAuthHeaders(usePAT);
+    const authHeaders = await generateAuthHeaders();
     authHeaders['Content-Type'] = 'application/json';
     // Prefer subjectquery (Graph) API
     const response = await fetch(`https://vssps.dev.azure.com/${organization}/_apis/graph/subjectquery?api-version=7.1-preview.1`, {
@@ -2300,7 +2201,11 @@ function showAssigneeLoadingIndicator() {
   if ($('#assignee-loading-indicator').length) return;
   $results.prepend('<li class="select2-results__option select2-assignee-loading" id="assignee-loading-indicator" aria-disabled="true"><span class="spinner"></span><span> Searching directory...</span></li>');
 }
-function hideAssigneeLoadingIndicator() { $('#assignee-loading-indicator').remove(); }
+
+// Function to hide loading indicator in the Assignee dropdown
+function hideAssigneeLoadingIndicator() {
+  $('#assignee-loading-indicator').remove();
+}
 
 // Handle input changes in Select2 search field for assignee dropdown
 // Track async search requests to avoid race conditions (out-of-order resolution overwriting newer input)

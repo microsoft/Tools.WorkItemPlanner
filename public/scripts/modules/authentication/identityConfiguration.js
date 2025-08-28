@@ -1,4 +1,3 @@
-const usePAT = false;
 const hostname = window.location.hostname;
 const port = window.location.port;
 const isLocal = hostname === "localhost";

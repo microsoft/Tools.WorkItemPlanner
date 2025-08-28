@@ -31,7 +31,8 @@
     </div>
     <div class="user-info" id="user-info" style="display:flex; align-items:center; gap:14px;">
       <!-- Help / re-run guided tour button -->
-      <button id="help-tour-btn" type="button" title="Help / Guided Tour" aria-label="Help / Guided Tour" style="background:transparent; border:none; color:#fff; font-size:20px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:4px;">
+      <button id="help-tour-btn" type="button" title="Help / Guided Tour" aria-label="Help / Guided Tour"
+        style="background:transparent; border:none; color:#fff; font-size:20px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:4px;">
         <i class="fas fa-info-circle" style="filter: drop-shadow(0 0 2px rgba(0,0,0,.4));"></i>
       </button>
       <span class="header-separator" aria-hidden="true"></span>
@@ -138,19 +139,22 @@
         <div style="display: flex; gap: 10px;">
           <!-- Title Prefix Input -->
           <div style="flex: 1; display: flex; flex-direction: column;">
-            <small class="form-text text-muted" style="margin-bottom:4px;">Title prefix for Work Item(s) (optional)</small>
+            <small class="form-text text-muted" style="margin-bottom:4px;">Title prefix for Work Item(s)
+              (optional)</small>
             <input type="text" class="form-control" id="deliverable-prefix" placeholder="Work Item Title Prefix">
           </div>
           <!-- Work Item Type Select -->
           <div style="flex: 1; display: flex; flex-direction: column;">
             <small class="form-text text-muted" style="margin-bottom:4px;">Type of Work Item(s)</small>
-            <select class="form-control" id="work-item-type-select" disabled required autocomplete="off" data-lpignore="true" aria-autocomplete="none">
+            <select class="form-control" id="work-item-type-select" disabled required autocomplete="off"
+              data-lpignore="true" aria-autocomplete="none">
               <option value="" disabled selected>Work Item Type</option>
             </select>
           </div>
         </div>
         <div id="work-item-hierarchy" style="margin-bottom: 10px; display: none;" class="mt-2">
-          <small class="form-text text-muted">Effective Hierarchy: Parent Work Item → <span id="selected-work-item-name">Selected Work Item Name</span> → Task</small>
+          <small class="form-text text-muted">Effective Hierarchy: Parent Work Item → <span
+              id="selected-work-item-name">Selected Work Item Name</span> → Task</small>
         </div>
       </div>
       <div style="margin-bottom: 30px;"></div>
@@ -163,7 +167,8 @@
               <div class="input-group">
                 <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <img src="images/work-item.webp" alt="Work Item Type" class="selected-wit-icon deliverable-wit-icon" />
+                  <img src="images/work-item.webp" alt="Work Item Type"
+                    class="selected-wit-icon deliverable-wit-icon" />
                   <input type="text" class="form-control deliverable-prefix" placeholder="Work Item Title Prefix"
                     style="flex: 1;" readonly disabled>
                 </div>
@@ -311,33 +316,6 @@
     </div>
   </div>
 
-  <div class="modal" id="pat-popup-modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title">Enter your Azure DevOps 'Personal Access Token (PAT)'</h2>
-        </div>
-        <div class="modal-body" style="text-align: left;">
-          <p style="color: darkred; display: none;" id="pat-popup-invalid-p">Error: Last entered PAT is invalid.</p>
-          <p><a href="https://microsoft.visualstudio.com/_usersSettings/tokens" target="_blank">Click here</a> to create
-            one with the following scopes:</p>
-          <ol>
-            <li>Work Items - Read & Write</li>
-          </ol>
-          <small class="form-text text-muted">New Token -> Select Scope(s) -> Create</small>
-          <div style="margin-bottom: 10px;"></div>
-          <p>Your PAT allows the tool to generate Work Item(s) on your behalf.</p>
-          <div style="margin-bottom: 10px;"></div>
-          <!-- <input type="password" id="pat-input" class="form-control" placeholder="PAT" required> -->
-          <div style="text-align: center;">
-            <div style="margin-bottom: 10px;"></div>
-            <button id="pat-submit" class="btn btn-primary" disabled>Submit</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="modal" id="load-preconfigured-items-confirmationModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -376,7 +354,8 @@
   </div>
 
   <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.14.2/js/msal-browser.min.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk.js"></script>
+  <script type="text/javascript"
+    src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk.js"></script>
   <script type="text/javascript" src="scripts/vendor/azure-app-insights-2.8.18.min.js" crossorigin="anonymous"></script>
   <script type="text/javascript" src="scripts/modules/storage/localStorageModule.js"></script>
   <script type="text/javascript" src="scripts/modules/textEditor/richTextEditorModule.js"></script>

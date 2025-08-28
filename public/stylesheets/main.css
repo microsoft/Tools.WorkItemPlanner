@@ -405,37 +405,6 @@ form {
   border: 1px dashed rgba(100, 149, 201, 1);
 }
 
-.pat-popup {
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.pat-popup-content {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 5px;
-  max-width: 400px;
-  text-align: center;
-}
-
-.pat-popup-content h3 {
-  margin-top: 0;
-  color: #242424;
-  font-size: 18px;
-}
-
-.pat-popup-content input {
-  margin: 10px 0;
-  padding: 5px;
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  font-size: 14px;
-}
-
 .deliverable-item.transition {
   opacity: 0;
   transform: translateY(-20px);
