@@ -96,7 +96,7 @@ Dropdowns are populated based on the user's access to Organizations, Projects, T
 
 Teams have the choice to onboard their own template i.e., customized choice of Work Item(s). To onboard a new template follow these steps.
 
-1. Create a JSON file adhering to this schema. Here is a reference template [wpx_engineering_dcr_v1.0.0.json](https://github.com/microsoft/Tools.WorkItemPlanner.git?path=/public/work_item_templates/w%2Bd_engineering_dcr_v1.0.0.json);
+1. Create a JSON file adhering to this schema. Here is a reference template [viva_engage_standard_v1.json](https://github.com/microsoft/Tools.WorkItemPlanner/blob/main/public/configuration/work_item_templates/viva_engage_standard_v1.json);
 
 ```javascript
 {
@@ -133,9 +133,9 @@ Example: wpx_engineering_dcr_v1.json, wpx_product_moments_v1.json, viva_engage_s
 
 3. Clone the repository: `git clone https://github.com/microsoft/Tools.WorkItemPlanner.git` and create a local branch.
 
-4. Save the template at the this location `\Tools.WorkItemPlanner\public\work_item_templates`.
+4. Save the template at the this location `\Tools.WorkItemPlanner\public\configuration\work_item_templates`.
 
-5. Add the template file name and the display name to the 'work_item_templates_index.js' file located in `\tools.WorkItemPlanner\public\work_item_templates`. Ensure adherence to the existing naming convention in the file.
+5. Add the template file name and the display name to the 'work_item_templates_index.js' file located in `\Tools.WorkItemPlanner\public\configuration\work_item_templates`. Ensure adherence to the existing naming convention in the file.
 
 6. Raise a pull request to the 'main' branch with the above additions.
 
