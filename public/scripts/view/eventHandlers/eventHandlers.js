@@ -8,7 +8,7 @@ $(document).ready(function () {
 // Select2 specific event handlers for dropdown closing behavior
 $(document).ready(function () {
   // Force close dropdown on selection for all dropdowns
-  $('#organization-select, #project-select, #team-select, #assigned-to-select').on('select2:select', function () {
+  $('#organization-select, #project-select, #team-select, #assigned-to-select, #work-item-type-select').on('select2:select', function () {
     $(this).select2('close');
   });
 
@@ -24,7 +24,7 @@ $(document).ready(function () {
   });
 
   // Auto-focus search input when Select2 dropdowns are opened
-  $('#organization-select, #project-select, #team-select, #assigned-to-select').on('select2:open', function (e) {
+  $('#organization-select, #project-select, #team-select, #assigned-to-select, #work-item-type-select').on('select2:open', function (e) {
     const dropdownId = $(this).attr('id');
 
     // Get the specific container for this select2 instance

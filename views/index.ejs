@@ -166,14 +166,14 @@
             <div class="form-group">
               <div class="input-group">
                 <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
-                <div style="display:flex; align-items:center; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px; flex:0.8;">
                   <img src="images/work-item.webp" alt="Work Item Type"
                     class="selected-wit-icon deliverable-wit-icon" />
                   <input type="text" class="form-control deliverable-prefix" placeholder="Work Item Title Prefix"
-                    style="flex: 1;" readonly disabled>
+                    style="flex:1; min-width:90px;" readonly disabled>
                 </div>
                 <input type="text" class="form-control deliverable-title" placeholder="Work Item Title" required
-                  style="flex: 2;">
+                  style="flex:2.0;">
                 <button type="button" class="btn description-toggle-btn" data-target="deliverable-description"
                   title="Toggle Description">
                   <i class="fas fa-caret-down description-caret"></i>

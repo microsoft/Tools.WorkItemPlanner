@@ -149,3 +149,16 @@ function getAccessToken_NoScopes() {
       });
   });
 }
+
+// Function to construct Auth Headers for Azure DevOps
+async function generateAuthHeaders() {
+  const headers = {};
+  try {
+    const accessToken = await getAccessToken();
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  } catch (error) {
+    console.error("Error getting access token:", error);
+    throw error;
+  }
+  return headers;
+}

@@ -418,6 +418,7 @@ function getFeatureUrl() {
   const featureIdVal = $("#feature-id").val();
   const organization = $("#organization-select").val();
   const project = $("#project-select").val();
+
   return `https://dev.azure.com/${organization}/${project}/_workitems/edit/${featureIdVal}`;
 }
 
@@ -487,6 +488,74 @@ async function createDeliverablesAndTasks(data) {
     let currentDeliverableTaskCount = 0;
     let currentDeliverableCount = 0;
 
+    // ================= Required Fields Discovery =================
+    // Helper to fetch required fields metadata for a work item type (cached in-memory per session)
+    if (!window.__witTypeRequiredCache)
+      window.__witTypeRequiredCache = new Map();
+
+    async function getRequiredFieldMetadata(typeName) {
+      const cacheKey = `${organization}::${project}::${typeName}`;
+      if (window.__witTypeRequiredCache.has(cacheKey)) return window.__witTypeRequiredCache.get(cacheKey);
+      try {
+        let requestHeaders = await generateAuthHeaders();
+        // For GET we only need Accept; avoid patch content-type confusion
+        requestHeaders['Accept'] = 'application/json';
+        const url = `${_azureDevOpsApiBaseUrl}/_apis/wit/workitemtypes/${encodeURIComponent(typeName)}?api-version=7.0`;
+        console.debug('[WIT] Fetching type definition:', url);
+        const res = await fetch(url, { headers: requestHeaders });
+        if (!res.ok) throw new Error(`Failed to fetch type definition for ${typeName} (${res.status})`);
+        const json = await res.json();
+        const fields = Array.isArray(json.fields) ? json.fields : [];
+        // Keep only required & writable fields; Azure DevOps uses 'alwaysRequired' for type-level requirement.
+        const required = fields.filter(f => (f.alwaysRequired || f.required || f.isRequired) && !f.readOnly);
+        console.debug(`[WIT] Raw required fields for ${typeName}:`, required.map(f => ({ name: f.name, ref: f.referenceName, type: f.type, alwaysRequired: f.alwaysRequired })));
+        window.__witTypeRequiredCache.set(cacheKey, required);
+        return required;
+      } catch (err) {
+        console.warn('Could not load required fields for type', typeName, err);
+        return [];
+      }
+    }
+
+    const deliverableTypeName = selectedWorkItemTypeName || 'Work Item';
+    const taskTypeName = 'Task';
+    const [deliverableRequiredMeta, taskRequiredMeta] = await Promise.all([
+      getRequiredFieldMetadata(deliverableTypeName),
+      getRequiredFieldMetadata(taskTypeName)
+    ]);
+
+    // Fields we already populate explicitly
+    const baseFieldSet = new Set([
+      'System.Title',
+      'System.Description',
+      'System.AreaPath',
+      'System.IterationPath',
+      'System.AssignedTo',
+      'Microsoft.VSTS.Scheduling.OriginalEstimate',
+      'Microsoft.VSTS.Scheduling.RemainingWork'
+    ]);
+
+    function buildRequiredFieldOps(metaList, workItemObj) {
+      // Simplified per requirement: For each required field (metaList already filtered),
+      // if its defaultValue is null AND we have not already set it, populate with description (if provided) else title.
+      const ops = [];
+      const skipped = [];
+      for (const f of metaList) {
+        if (!f || !f.referenceName) { skipped.push({ ref: f && f.referenceName, reason: 'no-ref' }); continue; }
+        if (baseFieldSet.has(f.referenceName)) { skipped.push({ ref: f.referenceName, reason: 'already-handled' }); continue; }
+        // Explicitly ignore system ID backing fields not intended for client population
+        if (f.referenceName === 'System.IterationId' || f.referenceName === 'System.AreaId') { skipped.push({ ref: f.referenceName, reason: 'ignored-explicit' }); continue; }
+        // Only act when defaultValue is explicitly null (undefined treated as skip to avoid stomping system values)
+        if (f.defaultValue !== null) { skipped.push({ ref: f.referenceName, reason: 'has-non-null-default' }); continue; }
+        const value = (workItemObj.description && workItemObj.description.trim()) ? workItemObj.description : (workItemObj.title || '');
+        if (!value) { skipped.push({ ref: f.referenceName, reason: 'no-desc-or-title' }); continue; }
+        ops.push({ op: 'add', path: `/fields/${f.referenceName}`, value });
+      }
+      console.debug('[WIT] Required null-default field ops prepared:', ops.map(o => o.path));
+      if (skipped.length) console.debug('[WIT] Skipped required fields:', skipped);
+      return ops;
+    }
+
     // Create Work-Items
     for (const deliverable of data.deliverables) {
       const deliverableData = [
@@ -521,6 +590,13 @@ async function createDeliverablesAndTasks(data) {
           },
         }] : []),
       ];
+
+      // Auto-populate additional required textual fields for this deliverable type
+      const extraDeliverableRequiredOps = buildRequiredFieldOps(deliverableRequiredMeta, deliverable);
+      if (extraDeliverableRequiredOps.length) {
+        deliverableData.push(...extraDeliverableRequiredOps);
+      }
+      console.debug('[WIT] Deliverable payload preview:', deliverableData.map(o => ({ path: o.path, hasValue: !!o.value }))); // shallow preview
 
       // Add description if provided
       if (deliverable.description && deliverable.description.trim()) {
@@ -583,6 +659,13 @@ async function createDeliverablesAndTasks(data) {
               value: selectedUserEmail,
             },
           ];
+
+          // Auto-populate additional required textual fields for Task type
+          const extraTaskRequiredOps = buildRequiredFieldOps(taskRequiredMeta, task);
+          if (extraTaskRequiredOps.length) {
+            taskData.push(...extraTaskRequiredOps);
+          }
+          console.debug('[WIT] Task payload preview:', taskData.map(o => ({ path: o.path, hasValue: !!o.value })));
 
           // Add task description if provided
           if (task.description && task.description.trim()) {
@@ -845,7 +928,6 @@ async function fetchFeatureDetails() {
       throw error;
     }
   }
-  // If we get here without conditions, ensure flag false when no id provided
   if (!featureId) {
     featureIdValid = false;
   }
@@ -993,19 +1075,6 @@ async function populateProjectsDropdown() {
   });
 
   projectSelect.disabled = false;
-}
-
-// Function to construct Auth Headers for Azure DevOps
-async function generateAuthHeaders() {
-  const headers = {};
-  try {
-    const accessToken = await getAccessToken();
-    headers["Authorization"] = `Bearer ${accessToken}`;
-  } catch (error) {
-    console.error("Error getting access token:", error);
-    throw error;
-  }
-  return headers;
 }
 
 // Show loading indicator
@@ -1242,7 +1311,7 @@ function populateTeamDropdown(teams) {
     }
     // Immediately inform the user (don't block on Work Item Types fetch)
     hideLoadingIndicator();
-    showInfoPopup("You are not a member of any <b>Team</b> in the selected <b>Project</b>. Automatic <b>Area Path</b> and <b>Iteration</b> suggestions are unavailable. Work Item Types are loading in the background. You can proceed now by: <ul><li>Manually entering the Area Path and Iteration</li><li>Selecting a Work Item Type (once loaded)</li><li>Choosing an Assignee (type 4+ characters to search the organization)</li></ul>");
+    showInfoPopup("You are not a member of any <b>Team</b> in the selected <b>Project</b>. Automatic <b>Area Path</b> and <b>Iteration</b> suggestions are unavailable. Work Item Types are loading in the background. You can proceed now by: <br> <ul><li>Manually entering the Area Path and Iteration</li><li>Selecting a Work Item Type (once loaded)</li><li>Choosing an Assignee (type 4+ characters to search the organization)</li></ul>");
     // Kick off background fetch of work item types & enable assignee fallback immediately
     enableAssigneeFallback();
     fetchWorkItemTypes()
@@ -1708,6 +1777,7 @@ function populateAreaPathSuggestions(areaPaths) {
   });
 }
 
+// Function to fetch the user's profile image from Microsoft Graph
 async function fetchUserProfileImage() {
   const accessToken_ = await getAccessToken_NoScopes();
 
@@ -2260,9 +2330,6 @@ async function handleAssigneeSearchInput(rawQuery) {
   // Show inline spinner (list item)
   showAssigneeLoadingIndicator();
   const requestId = ++lastAssigneeSearchRequestId;
-
-  const $assignedToSelect = getAssignedToSelect();
-
   const users = await searchOrganizationUsers(q);
   hideAssigneeLoadingIndicator();
   // If another newer request started since we kicked this off, abort applying stale results
