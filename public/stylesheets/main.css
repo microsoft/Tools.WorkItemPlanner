@@ -1,3 +1,29 @@
+/* Work Item Type icons in Select2 */
+.wit-icon { border-radius: 2px; display: inline-block; }
+.select2-container .wit-option { display: inline-flex; align-items: center; }
+
+/* Inline hierarchy display: keep label and tree on the same line and use the same small font size */
+.inline-hierarchy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem; /* small text */
+}
+.inline-hierarchy .hierarchy-tree {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0; /* override .hierarchy-tree default spacing when used inline */
+}
+.inline-hierarchy .hierarchy-item,
+.inline-hierarchy .hierarchy-connector {
+  display: inline-block;
+  line-height: 1;
+}
+
+/* Ensure individual items align vertically in case other rules affect them */
+.inline-hierarchy .hierarchy-item { vertical-align: middle; }
+
 /* Custom Select2 Styling */
 .select2-container {
   max-width: 100%;
@@ -94,6 +120,30 @@
   border-radius: 50%;
   margin-right: 8px;
 }
+
+/* Task input icon styles */
+.task-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+}
+.task-input-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+}
+
+/* Selected Work Item Type icon (before deliverable-prefix) */
+.selected-wit-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.deliverable-wit-icon { margin-right: 6px; }
 
 /* Assignee dropdown: stacked name + email */
 .select2-user-option .select2-user-text { display:flex; flex-direction:column; line-height:1.1; }

@@ -11,7 +11,10 @@ var indexRouter = require('./routes/index');
 var app = express();
 
 /// Azure Application Insights
-let appInsights = require("applicationinsights");
+// Initialize Application Insights only when a connection string is provided via
+// the APPLICATIONINSIGHTS_CONNECTION_STRING environment variable. This avoids
+// startup failures in local/dev environments where the env var is not set.
+const appInsightsConnectionString = process.env.APPLICATIONINSIGHTS_CONNECTION_STRING;
 
 //#region AzureDevOps Authentication with Service Principal
 const tenantId = '72f988bf-86f1-41af-91ab-2d7cd011db47';
@@ -87,20 +90,27 @@ app.use(function (err, req, res, next) {
 
 
 // #region Monitoring
-try {
-  appInsights.setup()
-    .setAutoDependencyCorrelation(true)
-    .setAutoCollectRequests(true)
-    .setAutoCollectPerformance(true, true)
-    .setAutoCollectExceptions(true)
-    .setAutoCollectDependencies(true)
-    .setAutoCollectConsole(true)
-    .setUseDiskRetryCaching(true)
-    .setSendLiveMetrics(true)
-    .setDistributedTracingMode(appInsights.DistributedTracingModes.AI)
-    .start();
-} catch (err) {
-  console.error('Failed to initialize Application Insights:', err);
+if (appInsightsConnectionString) {
+  try {
+    // require only when needed to avoid module side-effects during non-telemetry runs
+    const appInsights = require('applicationinsights');
+    appInsights.setup()
+      .setAutoDependencyCorrelation(true)
+      .setAutoCollectRequests(true)
+      .setAutoCollectPerformance(true, true)
+      .setAutoCollectExceptions(true)
+      .setAutoCollectDependencies(true)
+      .setAutoCollectConsole(true)
+      .setUseDiskRetryCaching(true)
+      .setSendLiveMetrics(true)
+      .setDistributedTracingMode(appInsights.DistributedTracingModes.AI)
+      .start();
+    console.info('Application Insights initialized.');
+  } catch (err) {
+    console.error('Failed to initialize Application Insights:', err);
+  }
+} else {
+  console.info('APPLICATIONINSIGHTS_CONNECTION_STRING not set; Application Insights disabled.');
 }
 // connection string is set in the environment variable APPLICATIONINSIGHTS_CONNECTION_STRING
 

@@ -150,14 +150,7 @@
           </div>
         </div>
         <div id="work-item-hierarchy" style="margin-bottom: 10px; display: none;" class="mt-2">
-          <small class="form-text text-muted">Effective Hierarchy</small>
-          <div class="hierarchy-tree">
-            <span class="hierarchy-item">Parent Work Item</span>
-            <span class="hierarchy-connector">→</span>
-            <span class="hierarchy-item" id="selected-work-item-name">Selected Work Item Name</span>
-            <span class="hierarchy-connector">→</span>
-            <span class="hierarchy-item">Task</span>
-          </div>
+          <small class="form-text text-muted">Effective Hierarchy: Parent Work Item → <span id="selected-work-item-name">Selected Work Item Name</span> → Task</small>
         </div>
       </div>
       <div style="margin-bottom: 30px;"></div>
@@ -169,8 +162,11 @@
             <div class="form-group">
               <div class="input-group">
                 <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
-                <input type="text" class="form-control deliverable-prefix" placeholder="Work Item Title Prefix"
-                  style="flex: 1;" readonly disabled>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <img src="images/work-item.webp" alt="Work Item Type" class="selected-wit-icon deliverable-wit-icon" />
+                  <input type="text" class="form-control deliverable-prefix" placeholder="Work Item Title Prefix"
+                    style="flex: 1;" readonly disabled>
+                </div>
                 <input type="text" class="form-control deliverable-title" placeholder="Work Item Title" required
                   style="flex: 2;">
                 <button type="button" class="btn description-toggle-btn" data-target="deliverable-description"
@@ -218,6 +214,9 @@
                 <li class="task-item">
                   <div class="input-group d-flex align-items-center" style="flex-wrap: nowrap; width: 100%; gap: 5px;">
                     <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
+                    <span class="input-group-text task-icon-wrapper" aria-hidden="true">
+                      <img src="images/task_icon.svg" alt="Task" class="task-input-icon">
+                    </span>
                     <input type="text" class="form-control task-title" placeholder="Task Title"
                       style="flex: 1 1 calc(85% - 5px);">
                     <input type="number" class="form-control task-estimate" placeholder="Estimate" min="0" max="100"
@@ -377,18 +376,17 @@
   </div>
 
   <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.14.2/js/msal-browser.min.js"></script>
-  <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk.js"></script>
-  <script type="text/javascript" src="work_item_templates/work_item_templates_index.js"></script>
-  <script type="text/javascript" src="scripts/authConfig.js"></script>
-  <script type="text/javascript" src="scripts/richTextEditor.js"></script>
-  <script type="text/javascript" src="scripts/storeRepo.js"></script>
-  <script type="text/javascript" src="scripts/firstRunGuide.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk.js"></script>
   <script type="text/javascript" src="scripts/vendor/azure-app-insights-2.8.18.min.js" crossorigin="anonymous"></script>
-  <script type="text/javascript" src="scripts/monitoring.js"></script>
-  <script type="text/javascript" src="scripts/authRedirect.js"></script>
-  <script type="text/javascript" src="scripts/main.js"></script>
-  <script type="text/javascript" src="scripts/eventHandlers.js"></script>
+  <script type="text/javascript" src="scripts/modules/storage/localStorageModule.js"></script>
+  <script type="text/javascript" src="scripts/modules/textEditor/richTextEditorModule.js"></script>
+  <script type="text/javascript" src="configuration/work_item_templates/work_item_templates_index.js"></script>
+  <script type="text/javascript" src="scripts/view/firstRunExperience/firstRunGuide.js"></script>
+  <script type="text/javascript" src="scripts/modules/monitoring/applicationInsights.js"></script>
+  <script type="text/javascript" src="scripts/modules/authentication/identityConfiguration.js"></script>
+  <script type="text/javascript" src="scripts/modules/authentication/authenticationHandler.js"></script>
+  <script type="text/javascript" src="scripts/view/main.js"></script>
+  <script type="text/javascript" src="scripts/view/eventHandlers/eventHandlers.js"></script>
 </body>
 
 </html>

@@ -554,8 +554,9 @@ async function createDeliverablesAndTasks(data) {
     let currentCall = 0;
     let currentDeliverableTaskCount = 0;
     let currentDeliverableCount = 0;
-    //Create Deliverables
-  for (const deliverable of data.deliverables) {
+
+    // Create Work-Items
+    for (const deliverable of data.deliverables) {
       const deliverableData = [
         {
           op: "add",
@@ -577,8 +578,8 @@ async function createDeliverablesAndTasks(data) {
           path: "/fields/System.AssignedTo",
           value: selectedUserEmail,
         },
-  // Parent linkage only if a feature/parent id is provided AND previously validated
-  ...(featureIdVal && featureIdValid ? [{
+        // Parent linkage only if a feature/parent id is provided AND previously validated
+        ...(featureIdVal && featureIdValid ? [{
           op: "add",
           path: "/relations/-",
           value: {
@@ -596,36 +597,6 @@ async function createDeliverablesAndTasks(data) {
           path: "/fields/System.Description",
           value: deliverable.description,
         });
-      }
-
-      // If the selected work item type is Bug, some processes require additional required fields
-      // such as Repro Steps and custom summary fields (e.g., yammer_engineering.SummaryofIssue).
-      // Populate them from available data (prefer description, fallback to title) to satisfy validation.
-      try {
-        const witLower = (selectedWorkItemTypeName || '').toLowerCase();
-        if (witLower.indexOf('bug') !== -1) {
-          const reproValue = (deliverable.description && deliverable.description.trim()) ? deliverable.description : `Repro steps not provided for ${deliverable.title || 'issue'}`;
-          const summaryValue = (deliverable.title && deliverable.title.trim()) ? deliverable.title : (deliverable.description && deliverable.description.trim() ? (deliverable.description.substring(0, 200)) : 'Summary not provided');
-
-          // Microsoft.VSTS.TCM.ReproSteps (common field for bugs)
-          deliverableData.push({
-            op: "add",
-            path: "/fields/Microsoft.VSTS.TCM.ReproSteps",
-            value: reproValue,
-          });
-
-          // Custom field used in some processes (example from error). It's safe to add when present.
-          // Use a defensive try/catch because adding unknown custom fields doesn't break client-side code;
-          // server will ignore unknown fields or raise validation which will surface to user.
-          deliverableData.push({
-            op: "add",
-            path: "/fields/yammer_engineering.SummaryofIssue",
-            value: summaryValue,
-          });
-        }
-      } catch (e) {
-        // Swallow – best-effort population of Bug-specific fields; validation errors will be shown by server if still required
-        console.debug('Failed to attach Bug-specific fields:', e);
       }
 
       currentDeliverableCount++;
@@ -838,6 +809,14 @@ function resetDeliverableItems() {
   $deliverableItems.find(".deliverable-title").val("");
   // Clear rich text editor content
   $deliverableItems.find(".deliverable-description").empty();
+
+  // Reset deliverable work-item-type icons to default
+  const defaultWitIcon = 'images/work-item.webp';
+  $deliverableItems.find('.deliverable-wit-icon').attr('src', defaultWitIcon);
+  // Also reset global selected work item icon (defensive — clearWorkItemTypesDropdown also does this)
+  if (typeof $ !== 'undefined') {
+    $('#global-selected-wit-icon').attr('src', defaultWitIcon);
+  }
 
   const prefixValue = "";
   $(".deliverable-item").each(function () {
@@ -1089,7 +1068,7 @@ async function populateProjectsDropdown() {
 
   // Add fetched projects as options
   const projectSelect = document.getElementById("project-select");
-  
+
   projects.forEach((project) => {
     const option = document.createElement("option");
     option.value = project.name;
@@ -1207,7 +1186,7 @@ async function populateFormWithPreconfiguredData(data) {
 
   // If no descriptions present anywhere, ensure all description sections remain collapsed
   if (!hasAnyDescription) {
-    $("#deliverables-container .description-section").each(function() {
+    $("#deliverables-container .description-section").each(function () {
       $(this).hide();
     });
     $("#deliverables-container .description-caret").removeClass("rotated");
@@ -1228,7 +1207,7 @@ async function removeAllDeliverablesAndTasks() {
 function updateDeliverable($deliverableItem, data) {
   $deliverableItem.find(".deliverable-title").val(data.title);
   $deliverableItem.find(".deliverable-title").removeClass("is-invalid");
-  
+
   // Set rich text content
   const $descriptionEditor = $deliverableItem.find(".deliverable-description");
   if (window.RichTextEditor && window.ENABLE_RICH_TEXT_EDITOR) {
@@ -1261,7 +1240,7 @@ function updateDeliverable($deliverableItem, data) {
 function updateTask($taskItem, data) {
   $taskItem.find(".task-title").val(data.title);
   $taskItem.find(".task-estimate").val(data.estimate);
-  
+
   // Set rich text content
   const $descriptionEditor = $taskItem.find(".task-description");
   if (window.RichTextEditor && window.ENABLE_RICH_TEXT_EDITOR) {
@@ -1496,17 +1475,17 @@ async function fetchUsersInTeam() {
 // Function to clear assigned-to-select dropdown
 function clearAssignedToDropdown() {
   const $assignedToSelect = $("#assigned-to-select");
-  
+
   if ($assignedToSelect.length > 0) {
     // Clear all options except the first one (placeholder)
     $assignedToSelect.find('option:not(:first)').remove();
-    
+
     // Reset to placeholder option
     $assignedToSelect.val('').trigger('change');
-    
+
     // Disable the dropdown
     $assignedToSelect.prop('disabled', true);
-    
+
     // Remove validation styling
     $assignedToSelect.removeClass('is-invalid');
   }
@@ -1522,7 +1501,7 @@ function enableAssigneeFallback() {
   $assignedToSelect.find('option:not(:first)').remove();
   if (userDisplayName && userEmailId) {
     const opt = new Option(userDisplayName + ' (You)', userEmailId, true, true);
-    $(opt).attr('data-user-id','current-user').attr('data-display-name', userDisplayName).attr('data-email', userEmailId);
+    $(opt).attr('data-user-id', 'current-user').attr('data-display-name', userDisplayName).attr('data-email', userEmailId);
     $assignedToSelect.append(opt);
   }
   $assignedToSelect.prop('disabled', false).trigger('change');
@@ -1531,9 +1510,9 @@ function enableAssigneeFallback() {
 // Function to populate the "Assigned To" dropdown
 function populateAssignedToDropdown(users) {
   clearAssignedToDropdown();
-  
+
   const $assignedToSelect = $("#assigned-to-select");
-  
+
   if (!$assignedToSelect.length) {
     console.error("Assigned to dropdown element not found");
     return;
@@ -1552,16 +1531,16 @@ function populateAssignedToDropdown(users) {
     // Filter out invalid users and sort by displayName
     const validUsers = users.filter((user) => {
       const identity = user.identity;
-      return identity && 
-             identity.displayName && 
-             identity.uniqueName && 
-             identity.uniqueName !== userEmailId && 
-             emailRegex.test(identity.uniqueName) &&
-             // Filter out service accounts and inactive users
-             !identity.displayName.toLowerCase().includes('[service]') &&
-             !identity.displayName.toLowerCase().includes('[inactive]') &&
-             // Only include users, not groups
-             (!user.isContainer || user.isContainer === false);
+      return identity &&
+        identity.displayName &&
+        identity.uniqueName &&
+        identity.uniqueName !== userEmailId &&
+        emailRegex.test(identity.uniqueName) &&
+        // Filter out service accounts and inactive users
+        !identity.displayName.toLowerCase().includes('[service]') &&
+        !identity.displayName.toLowerCase().includes('[inactive]') &&
+        // Only include users, not groups
+        (!user.isContainer || user.isContainer === false);
     });
 
     // Sort users by displayName
@@ -1572,13 +1551,13 @@ function populateAssignedToDropdown(users) {
       const displayName = user.identity.displayName;
       const emailAddress = user.identity.uniqueName;
       const userId = user.identity.id;
-      
+
       // Add to select with data attributes for avatar rendering
-  const option = new Option(displayName, emailAddress);
-  $(option).attr('data-user-id', userId);
-  $(option).attr('data-display-name', displayName);
-  $(option).attr('data-email', emailAddress);
-  $(option).attr('data-source', 'team');
+      const option = new Option(displayName, emailAddress);
+      $(option).attr('data-user-id', userId);
+      $(option).attr('data-display-name', displayName);
+      $(option).attr('data-email', emailAddress);
+      $(option).attr('data-source', 'team');
       $assignedToSelect.append(option);
     }
 
@@ -1605,7 +1584,7 @@ function initializeSelect2Dropdowns() {
     minimumResultsForSearch: 0, // Always show search box
     dropdownCssClass: 'select2-dropdown-large'
   });
-  
+
   // Initialize project dropdown
   $('#project-select').select2({
     placeholder: 'Select a Project',
@@ -1616,7 +1595,7 @@ function initializeSelect2Dropdowns() {
     minimumResultsForSearch: 0, // Always show search box
     dropdownCssClass: 'select2-dropdown-large'
   });
-  
+
   // Initialize team dropdown
   $('#team-select').select2({
     placeholder: 'Select a Team',
@@ -1627,7 +1606,37 @@ function initializeSelect2Dropdowns() {
     minimumResultsForSearch: 0, // Always show search box
     dropdownCssClass: 'select2-dropdown-large'
   });
-  
+
+  // Initialize work item type dropdown (Select2)
+  $('#work-item-type-select').select2({
+    placeholder: 'Select a Work Item Type',
+    allowClear: false,
+    width: '100%',
+    dropdownAutoWidth: true,
+    closeOnSelect: true,
+    minimumResultsForSearch: 0,
+    dropdownCssClass: 'select2-dropdown-large',
+    escapeMarkup: function (markup) { return markup; },
+    templateResult: function (data) {
+      if (!data.id) { return data.text; }
+      const $el = $(data.element);
+      const iconUrl = $el.data('icon-url');
+      if (iconUrl) {
+        return `<span class="wit-option"><img src="${iconUrl}" class="wit-icon" width="18" height="18" style="margin-right:6px;vertical-align:middle;">${data.text}</span>`;
+      }
+      return data.text;
+    },
+    templateSelection: function (data) {
+      if (!data.id) { return data.text; }
+      const $el = $(data.element);
+      const iconUrl = $el.data('icon-url');
+      if (iconUrl) {
+        return `<span class="wit-option"><img src="${iconUrl}" class="wit-icon" width="16" height="16" style="margin-right:6px;vertical-align:middle;">${data.text}</span>`;
+      }
+      return data.text;
+    }
+  });
+
   // Initialize assignee dropdown with avatar support
   $('#assigned-to-select').select2({
     placeholder: 'Select an Assignee',
@@ -1636,10 +1645,10 @@ function initializeSelect2Dropdowns() {
     closeOnSelect: true,
     templateResult: formatUserOption,
     templateSelection: formatUserSelection,
-    escapeMarkup: function(markup) { return markup; },
+    escapeMarkup: function (markup) { return markup; },
     minimumResultsForSearch: 0, // Always show search box
     dropdownCssClass: 'select2-dropdown-large',
-    matcher: function(params, data) {
+    matcher: function (params, data) {
       // If there are no search terms, return all data
       if ($.trim(params.term) === '') {
         return data;
@@ -1647,20 +1656,20 @@ function initializeSelect2Dropdowns() {
 
       // Search term normalization
       const searchTerm = params.term.toLowerCase();
-      
+
       // Get user data from the option element
       const $option = $(data.element);
       const displayName = ($option.data('display-name') || data.text || '').toLowerCase();
       const email = ($option.data('email') || data.id || '').toLowerCase();
-      
+
       // Extract potential alias from email (part before @)
       const alias = email.includes('@') ? email.split('@')[0] : '';
-      
+
       // Check if search term matches any of: display name, email, or alias
       const matchesDisplayName = displayName.indexOf(searchTerm) > -1;
       const matchesEmail = email.indexOf(searchTerm) > -1;
       const matchesAlias = alias.indexOf(searchTerm) > -1;
-      
+
       if (matchesDisplayName || matchesEmail || matchesAlias) {
         return data;
       }
@@ -1698,12 +1707,12 @@ function formatUserSelection(user) {
   if (!user.id) {
     return user.text;
   }
-  
+
   const $user = $(user.element);
   const userId = $user.data('user-id');
   const displayName = $user.data('display-name') || user.text;
   const source = $user.data('source') || 'team';
-  
+
   let avatarUrl = avatarCache.get(userId) || createAvatarCanvas(displayName);
   // Kick off fetch only if not cached (will update all rendered instances once loaded)
   if (!avatarCache.has(userId) && userId && userId !== 'current-user') {
@@ -1712,9 +1721,9 @@ function formatUserSelection(user) {
       // Update any rendered selection image
       $('.select2-user-image').filter(`[data-user-id="${userId}"]`).attr('src', real);
       $('.select2-selection__rendered .select2-user-image').attr('src', real);
-    }).catch(()=>{});
+    }).catch(() => { });
   }
-  
+
   return $(`
     <div class="select2-user-selection">
       <img class="select2-user-image" src="${avatarUrl}" alt="${displayName}" style="width: 20px; height: 20px; border-radius: 50%; margin-right: 6px;">
@@ -1821,7 +1830,7 @@ async function fetchUserProfileImage() {
 // Function to generate avatar initials for users
 function generateAvatarInitials(displayName) {
   if (!displayName) return 'U';
-  
+
   const names = displayName.trim().split(' ');
   if (names.length === 1) {
     return names[0].charAt(0).toUpperCase();
@@ -1837,12 +1846,12 @@ function generateAvatarColor(displayName) {
     '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
     '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5'
   ];
-  
+
   let hash = 0;
   for (let i = 0; i < displayName.length; i++) {
     hash = displayName.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   return colors[Math.abs(hash) % colors.length];
 }
 
@@ -1851,31 +1860,31 @@ function createAvatarCanvas(displayName, size = 24) {
   // Use higher DPI for sharper rendering
   const devicePixelRatio = window.devicePixelRatio || 1;
   const scaledSize = size * devicePixelRatio;
-  
+
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  
+
   // Set actual canvas size (scaled for high DPI)
   canvas.width = scaledSize;
   canvas.height = scaledSize;
-  
+
   // Set display size (what the browser will show)
   canvas.style.width = size + 'px';
   canvas.style.height = size + 'px';
-  
+
   // Scale the context to match device pixel ratio
   ctx.scale(devicePixelRatio, devicePixelRatio);
-  
+
   // Enable anti-aliasing and better text rendering
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.textRenderingOptimization = 'optimizeQuality';
-  
+
   // Fill background with rounded corners for better appearance
   const radius = size * 0.1; // 10% radius for slight rounding
   ctx.fillStyle = generateAvatarColor(displayName);
   ctx.beginPath();
-  
+
   // Use roundRect if available, otherwise fall back to regular rect
   if (ctx.roundRect) {
     ctx.roundRect(0, 0, size, size, radius);
@@ -1893,7 +1902,7 @@ function createAvatarCanvas(displayName, size = 24) {
     ctx.closePath();
   }
   ctx.fill();
-  
+
   // Add text with improved font rendering
   ctx.fillStyle = '#ffffff';
   // Use a slightly larger font size for better clarity
@@ -1901,16 +1910,16 @@ function createAvatarCanvas(displayName, size = 24) {
   ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  
+
   // Add subtle text shadow for better readability
   ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 1;
   ctx.shadowBlur = 1;
-  
+
   const initials = generateAvatarInitials(displayName);
   ctx.fillText(initials, size / 2, size / 2);
-  
+
   return canvas.toDataURL('image/png');
 }
 
@@ -1937,7 +1946,7 @@ async function tryFetchGraphAvatar(organization, userId, size, usePATFlag) {
           const binary = atob(data.value);
           const len = binary.length;
           const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+          for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
           const blob = new Blob([bytes], { type: 'image/png' });
           objectUrl = URL.createObjectURL(blob);
         } catch (e) {
@@ -2013,7 +2022,7 @@ async function fetchUserAvatar(userId, displayName, opts = {}) {
     const legacyUrl = await tryFetchLegacyIdentityAvatar(organization, userId, usePAT);
     if (legacyUrl) { avatarCache.set(userId, legacyUrl); return legacyUrl; }
   }
-  
+
   // 3. Final fallback: generated initials avatar (and cache)
   const generated = createAvatarCanvas(displayName);
   // avatarCache.set(userId, generated); Do not cache generated image
@@ -2023,7 +2032,7 @@ async function fetchUserAvatar(userId, displayName, opts = {}) {
 // Function to update avatars in the assignee dropdown after it's rendered
 function updateAssigneeDropdownAvatars() {
   const $userOptions = $('.select2-container--open .select2-user-option');
-  $userOptions.each(function() {
+  $userOptions.each(function () {
     const $option = $(this);
     const userId = $option.attr('data-user-id');
     const displayName = $option.attr('data-display-name');
@@ -2033,7 +2042,7 @@ function updateAssigneeDropdownAvatars() {
       fetchUserAvatar(userId, displayName, { source }).then(url => {
         avatarCache.set(userId, url);
         $img.attr('src', url);
-      }).catch(() => {});
+      }).catch(() => { });
     } else if (avatarCache.has(userId)) {
       $img.attr('src', avatarCache.get(userId));
     }
@@ -2048,15 +2057,15 @@ function prefetchAssigneeAvatars(max = 40) {
   }
   const $options = $('#assigned-to-select option');
   let count = 0;
-  $options.each(function() {
+  $options.each(function () {
     if (count >= max) return false; // break
     const userId = $(this).data('user-id');
     const displayName = $(this).data('display-name');
-  const source = $(this).data('source') || 'team';
+    const source = $(this).data('source') || 'team';
     if (userId && userId !== 'current-user' && !avatarCache.has(userId)) {
       // Stagger requests slightly
       setTimeout(() => {
-    fetchUserAvatar(userId, displayName, { source }).catch(()=>{});
+        fetchUserAvatar(userId, displayName, { source }).catch(() => { });
       }, count * 50); // 50ms spacing
       count++;
     }
@@ -2155,20 +2164,20 @@ let lastAssigneeAppliedQuery = '';
 
 // Clean up avatar cache (referenced in eventHandlers.js)
 function cleanupAvatarCache() {
-  try { 
+  try {
     // Revoke object URLs to prevent memory leaks
     avatarCache.forEach((url, userId) => {
       if (typeof url === 'string' && url.startsWith('blob:')) {
         URL.revokeObjectURL(url);
       }
     });
-    avatarCache.clear(); 
-  } catch (_) {}
+    avatarCache.clear();
+  } catch (_) { }
 }
 
 // Wrap populateAssignedToDropdown to also snapshot team members once (only when called from team fetch)
 const _origPopulateAssignedToDropdown = populateAssignedToDropdown;
-populateAssignedToDropdown = function(users) { // eslint-disable-line no-global-assign
+populateAssignedToDropdown = function (users) { // eslint-disable-line no-global-assign
   _origPopulateAssignedToDropdown(users);
   // Build snapshot of valid users (exclude placeholder & current user duplication rules mirror original filtering)
   if (Array.isArray(users)) {
@@ -2208,12 +2217,12 @@ function rebuildAssigneeOptionsFromGenericUsers(users, { preserveSelection = tru
     seenEmails.add(u.email);
     deduped.push(u);
   }
-  deduped.sort((a,b)=> a.displayName.localeCompare(b.displayName));
+  deduped.sort((a, b) => a.displayName.localeCompare(b.displayName));
   for (const u of deduped) {
     const opt = new Option(u.displayName, u.email, false, false);
     $(opt).attr('data-user-id', u.id || '');
     $(opt).attr('data-display-name', u.displayName);
-  $(opt).attr('data-email', u.email);
+    $(opt).attr('data-email', u.email);
     if (isOrgSearch) { $(opt).attr('data-source', 'org'); } else { $(opt).attr('data-source', 'team'); }
     $assignedToSelect.append(opt);
   }
@@ -2231,7 +2240,7 @@ function rebuildAssigneeOptionsFromGenericUsers(users, { preserveSelection = tru
     $assignedToSelect.trigger('change.select2');
   }
   // Update avatars (some may be new) after slight delay
-  setTimeout(()=> updateAssigneeDropdownAvatars(), 50);
+  setTimeout(() => updateAssigneeDropdownAvatars(), 50);
 }
 
 // Perform organization-wide search for users whose display name or email matches query
@@ -2328,13 +2337,13 @@ async function handleAssigneeSearchInput(rawQuery) {
       }
     }
     // Restore caret if we captured it (DOM may have rebuilt)
-    setTimeout(()=> {
+    setTimeout(() => {
       const $sf2 = $('.select2-container--open .select2-search__field');
       if ($sf2.length && preValue !== null) {
         // Only restore if user hasn't typed more meanwhile
         if ($sf2.val() === preValue || $sf2.val() === originalRaw) {
           if ($sf2[0].setSelectionRange && caretStart != null) {
-            try { $sf2[0].setSelectionRange(caretStart, caretEnd); } catch(_) {}
+            try { $sf2[0].setSelectionRange(caretStart, caretEnd); } catch (_) { }
           }
         }
       }
@@ -2370,14 +2379,14 @@ async function handleAssigneeSearchInput(rawQuery) {
     }
   }
   // Restore caret & input value (avoid overriding if user typed more during async call)
-  setTimeout(()=> {
+  setTimeout(() => {
     const $sf = $('.select2-container--open .select2-search__field');
     if ($sf.length) {
       // If user hasn't changed the value (still matches original), keep it; otherwise don't touch
       if ($sf.val() === preValue || $sf.val() === originalRaw) {
         $sf.val(originalRaw);
         if ($sf[0].setSelectionRange && caretStart != null) {
-          try { $sf[0].setSelectionRange(caretStart, caretEnd); } catch(_) {}
+          try { $sf[0].setSelectionRange(caretStart, caretEnd); } catch (_) { }
         }
       }
     }
@@ -2390,4 +2399,70 @@ function debouncedAssigneeSearch(rawQuery) {
   assigneeSearchDebounce = setTimeout(() => {
     handleAssigneeSearchInput(rawQuery);
   }, 350); // 350ms debounce
+}
+
+// Function to clear work-item-type-select dropdown
+function clearWorkItemTypesDropdown() {
+  const workItemSelect = document.getElementById("work-item-type-select");
+
+  // Remove all options except the first one
+  while (workItemSelect.options.length > 1) {
+    workItemSelect.remove(1);
+  }
+  selectedWorkItemTypeName = "Work Item";
+  // Update the hierarchy display
+  $("#deliverables-container .deliverable-prefix").attr("placeholder", selectedWorkItemTypeName + " Title Prefix");
+  $("#deliverables-container .deliverable-title").attr("placeholder", selectedWorkItemTypeName + " Title");
+  $("#selected-work-item-name").text(selectedWorkItemTypeName);
+  $("#work-item-hierarchy").show();
+  // reset global icon
+  $("#global-selected-wit-icon").attr('src', 'images/work-item.webp');
+
+  // Update other fields
+  $('#work-items-header').contents().first().replaceWith(selectedWorkItemTypeName + " ");
+
+  workItemSelect.selectedIndex = 0;
+  workItemSelect.disabled = true;
+}
+
+// Function to populate a dropdown with the list of work item types
+function populateWorkItemTypesDropdown(workItemTypes) {
+  const $dropdown = $("#work-item-type-select"); // Adjust selector to your work item types dropdown
+  clearWorkItemTypesDropdown();
+
+  workItemTypes.forEach((type) => {
+    // Skip work item types that are disabled in the response
+    if (type.isDisabled) {
+      return;
+    }
+    const option = new Option(type.name, type.referenceName);
+    if (type.icon && type.icon.url) {
+      $(option).attr('data-icon-url', type.icon.url);
+    }
+    $dropdown.append(option);
+  });
+
+  $dropdown.prop("disabled", false);
+  // If Select2 is initialized on this element, notify it that options changed
+  if ($dropdown.hasClass('select2-hidden-accessible')) {
+    $dropdown.trigger('change.select2');
+  } else {
+    $dropdown.trigger('change');
+  }
+}
+
+// Helper: unified way to extract description content regardless of editor mode
+function getDescriptionContent($editorEl) {
+  try {
+    if (window.RichTextEditor && typeof window.RichTextEditor.getRichTextContent === 'function') {
+      return window.RichTextEditor.getRichTextContent($editorEl).trim();
+    }
+  } catch (e) {
+    // Swallow – fallback paths below should still work
+    console.debug('RichTextEditor get content failed, falling back.', e);
+  }
+  if ($editorEl.is('textarea')) {
+    return ($editorEl.val() || '').trim();
+  }
+  return ($editorEl.text() || '').trim();
 }

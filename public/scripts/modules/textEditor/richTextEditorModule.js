@@ -476,12 +476,3 @@ function toggleDescriptionWidth(button) {
     button.attr('title', 'Collapse Width');
   }
 }
-
-// Export functions for use in other scripts
-window.RichTextEditor = {
-  getRichTextContent: getRichTextContent,
-  setRichTextContent: setRichTextContent,
-  getRichTextPlainText: getRichTextPlainText,
-  convertPlainTextToHtml: convertPlainTextToHtml,
-  updateToolbarButtonStates: updateToolbarButtonStates
-};

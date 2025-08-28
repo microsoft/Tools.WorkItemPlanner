@@ -2,10 +2,11 @@ fetch('/api/app-insights-connection')
   .then(response => response.json())
   .then(data => {
     if (!data.connectionString) {
-      throw new Error("Failed to retrieve App Insights connection string.");
+      console.warn("Application Insights not available: connection string not configured.");
+      return;
     }
 
-    var appInsights = window.appInsights || (function(config){
+    const appInsights = window.appInsights || (function(config){
       var instance = { config: config };
       var script = document.createElement("script");
       script.src = "https://js.monitor.azure.com/scripts/b/ai.2.min.js"; 

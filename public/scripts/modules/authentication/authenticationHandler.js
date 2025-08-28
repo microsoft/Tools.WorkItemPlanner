@@ -1,5 +1,5 @@
 // This script handles authentication and token acquisition using MSAL.js.
-// It manages user sign-in, sign-out, and token retrieval for API calls.
+// It is authored as an ES module and also exposes globals for backwards compatibility.
 
 // Create the main myMSALObj instance
 // Configuration parameters are located at config.js
@@ -31,7 +31,13 @@ function setUserAuthContext() {
     return;
   } else if (currentAccounts.length > 1) {
     console.warn("Multiple accounts detected. Choosing the account where username ends with @microsoft.com");
-    username = currentAccounts.filter((account) => account.username.endsWith("@microsoft.com")).username;
+    const msAccount = currentAccounts.find((account) => account.username && account.username.endsWith("@microsoft.com"));
+    if (msAccount) {
+      username = msAccount.username;
+    } else {
+      // Fallback to first account
+      username = currentAccounts[0].username;
+    }
   } else if (currentAccounts.length === 1) {
     console.log("Single account detected. Proceeding with that account.");
     username = currentAccounts[0].username;

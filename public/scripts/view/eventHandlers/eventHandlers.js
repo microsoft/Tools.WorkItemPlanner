@@ -1,4 +1,4 @@
-// Event handlers document ready
+// Event handler document ready
 $(document).ready(function () {
   showLoadingIndicator();
   if (!usePAT) {
@@ -9,52 +9,36 @@ $(document).ready(function () {
   }
 });
 
-// Helper: unified way to extract description content regardless of editor mode
-function getDescriptionContent($editorEl) {
-  try {
-    if (window.RichTextEditor && typeof window.RichTextEditor.getRichTextContent === 'function') {
-      return window.RichTextEditor.getRichTextContent($editorEl).trim();
-    }
-  } catch (e) {
-    // Swallow – fallback paths below should still work
-    console.debug('RichTextEditor get content failed, falling back.', e);
-  }
-  if ($editorEl.is('textarea')) {
-    return ($editorEl.val() || '').trim();
-  }
-  return ($editorEl.text() || '').trim();
-}
-
 // Select2 specific event handlers for dropdown closing behavior
-$(document).ready(function() {
+$(document).ready(function () {
   // Force close dropdown on selection for all dropdowns
-  $('#organization-select, #project-select, #team-select, #assigned-to-select').on('select2:select', function() {
+  $('#organization-select, #project-select, #team-select, #assigned-to-select').on('select2:select', function () {
     $(this).select2('close');
   });
-  
+
   // Additional explicit close handlers for problematic dropdowns
-  $('#project-select').on('select2:select', function(e) {
+  $('#project-select').on('select2:select', function (e) {
     e.preventDefault();
     $(this).select2('close');
   });
-  
-  $('#team-select').on('select2:select', function(e) {
+
+  $('#team-select').on('select2:select', function (e) {
     e.preventDefault();
     $(this).select2('close');
   });
-  
+
   // Auto-focus search input when Select2 dropdowns are opened
-  $('#organization-select, #project-select, #team-select, #assigned-to-select').on('select2:open', function(e) {
+  $('#organization-select, #project-select, #team-select, #assigned-to-select').on('select2:open', function (e) {
     const dropdownId = $(this).attr('id');
-    
+
     // Get the specific container for this select2 instance
     const containerId = $(this).data('select2').$container.attr('id');
-    
+
     // Find and focus the search field
     const focusSearch = () => {
       // Find the search field in the opened dropdown
       const searchField = $('.select2-container--open .select2-dropdown .select2-search__field');
-      
+
       if (searchField.length > 0) {
         try {
           searchField[0].focus();
@@ -64,10 +48,10 @@ $(document).ready(function() {
         }
       }
     };
-    
+
     // Single timeout should be sufficient since focus is working
     setTimeout(focusSearch, 100);
-    
+
     // Special handling for assignee dropdown to load real avatars
     if (dropdownId === 'assigned-to-select') {
       setTimeout(() => {
@@ -79,13 +63,13 @@ $(document).ready(function() {
         const $searchField = $('.select2-container--open .select2-search__field');
         if ($searchField.length) {
           // Remove previous handler to avoid duplicates
-            $searchField.off('input.assigneeSearch keyup.assigneeSearch');
-            $searchField.on('input.assigneeSearch keyup.assigneeSearch', function(ev) {
-              const val = $(this).val();
-              if (typeof debouncedAssigneeSearch === 'function') {
-                debouncedAssigneeSearch(val);
-              }
-            });
+          $searchField.off('input.assigneeSearch keyup.assigneeSearch');
+          $searchField.on('input.assigneeSearch keyup.assigneeSearch', function (ev) {
+            const val = $(this).val();
+            if (typeof debouncedAssigneeSearch === 'function') {
+              debouncedAssigneeSearch(val);
+            }
+          });
         }
       }, 50);
     }
@@ -98,7 +82,7 @@ $(document).on("click", ".description-toggle-btn", function (e) {
   const $button = $(this);
   const $caret = $button.find(".description-caret");
   const $descriptionSection = $button.closest(".form-group, .task-item").find(".description-section");
-  
+
   if ($descriptionSection.is(":visible")) {
     $descriptionSection.slideUp(200);
     $caret.removeClass("rotated");
@@ -119,7 +103,7 @@ $("#add-deliverable").on("click", function (e) {
     const $newDeliverable = $lastDeliverable.clone();
     $newDeliverable.attr("data-index", newDeliverableIndex);
     $newDeliverable.find("input, textarea").val("");
-    
+
     // Clear rich text editor content
     if (window.ENABLE_RICH_TEXT_EDITOR) {
       $newDeliverable.find(".deliverable-description").empty();
@@ -221,7 +205,7 @@ $(document).on("click", ".add-task-btn", function (e) {
 
   const $taskItem = $taskList.find(".task-item").first().clone();
   $taskItem.find("input, textarea").val("");
-  
+
   // Clear rich text editor content
   if (window.ENABLE_RICH_TEXT_EDITOR) {
     $taskItem.find(".task-description").empty();
@@ -229,11 +213,11 @@ $(document).on("click", ".add-task-btn", function (e) {
     // For plain text mode, clear text content
     $taskItem.find(".task-description").text("");
   }
-  
+
   // Reset description section to collapsed state for new task
   $taskItem.find(".description-section").hide();
   $taskItem.find(".description-caret").removeClass("rotated");
-  
+
   $taskList.append($taskItem);
 
   // Smoothly show the new task item
@@ -275,11 +259,11 @@ $("#feature-form").on("submit", function (e) {
 
     $(".deliverable-item").each(function (index) {
       const deliverableTitle = $(this).find(".deliverable-title").val();
-      
-  // Get description for deliverable (supports rich text & plain modes)
-  const $deliverableDescEditor = $(this).find(".deliverable-description");
-  const deliverableDescription = getDescriptionContent($deliverableDescEditor);
-      
+
+      // Get description for deliverable (supports rich text & plain modes)
+      const $deliverableDescEditor = $(this).find(".deliverable-description");
+      const deliverableDescription = getDescriptionContent($deliverableDescEditor);
+
       const tasks = [];
 
       $(this)
@@ -288,13 +272,13 @@ $("#feature-form").on("submit", function (e) {
           const taskTitle = $(this).find(".task-title").val().trim();
           if (taskTitle) { // Only add task if title is not empty
             totalTasksCount++;
-            
+
             // Get description for task (supports rich text & plain modes)
             const $taskDescEditor = $(this).find(".task-description");
             const taskDescription = getDescriptionContent($taskDescEditor);
-            
-            tasks.push({ 
-              title: taskTitle, 
+
+            tasks.push({
+              title: taskTitle,
               estimate: $(this).find(".task-estimate").val().trim(),
               description: taskDescription
             });
@@ -362,7 +346,7 @@ $("#load-preconfigured-items-confirmBtn").on("click", async function () {
 
   try {
     //Fetch the work-item-template JSON file  
-    const jsonFilePath = "work_item_templates/" + prefilCategoryChoice;
+    const jsonFilePath = "configuration/work_item_templates/" + prefilCategoryChoice;
     const workItemsJson = await readJSONFileByNameFromPublicFolder(jsonFilePath);
 
     await populateFormWithPreconfiguredData(workItemsJson).then(() => {
@@ -477,7 +461,7 @@ $(document).on("blur", "#feature-id", function () {
     //Clear the feature name
     $("#feature-name").text("");
     $("#feature-name").attr("href", "#");
-  if (typeof featureIdValid !== 'undefined') { featureIdValid = false; }
+    if (typeof featureIdValid !== 'undefined') { featureIdValid = false; }
   } else {
     //Indicates that the user has updated the field. Attempt to fetch the feature details
     $("#feature-id").removeClass("is-invalid");
@@ -493,7 +477,7 @@ $(document).on("blur", "#feature-id", function () {
 
       // Call the Azure DevOps API to get feature details
       showLoadingIndicator("Fetching Work-Item Details...");
-  if (typeof featureIdValid !== 'undefined') { featureIdValid = false; } // pessimistically reset until validated
+      if (typeof featureIdValid !== 'undefined') { featureIdValid = false; } // pessimistically reset until validated
       fetchFeatureDetails(featureIdText, organization, project, true)
         .then((featureDetails) => {
           // Display the feature name in the feature ID field
@@ -524,7 +508,7 @@ $("#organization-select").on("change", async function () {
     clearWorkItemTypesDropdown();
     clearTeamDropdown();
     clearAssignedToDropdown();
-    
+
     // Clean up avatar cache when organization changes since user IDs may be different
     if (typeof cleanupAvatarCache === 'function') {
       cleanupAvatarCache();
@@ -609,43 +593,19 @@ $("#project-select").on("change", function () {
   }
 });
 
-// Function to clear work-item-type-select dropdown
-function clearWorkItemTypesDropdown() {
-  const workItemSelect = document.getElementById("work-item-type-select");
-
-  // Remove all options except the first one
-  while (workItemSelect.options.length > 1) {
-    workItemSelect.remove(1);
-  }
-  selectedWorkItemTypeName = "Work Item";
-  // Update the hierarchy display
-  $("#deliverables-container .deliverable-prefix").attr("placeholder", selectedWorkItemTypeName + " Title Prefix");
-  $("#deliverables-container .deliverable-title").attr("placeholder", selectedWorkItemTypeName + " Title");
-  $("#selected-work-item-name").text(selectedWorkItemTypeName);
-  $("#work-item-hierarchy").show();
-
-  // Update other fields
-  $('#work-items-header').contents().first().replaceWith(selectedWorkItemTypeName + " ");
-
-  workItemSelect.selectedIndex = 0;
-  workItemSelect.disabled = true;
-}
-
-// Function to populate a dropdown with the list of work item types
-function populateWorkItemTypesDropdown(workItemTypes) {
-  const $dropdown = $("#work-item-type-select"); // Adjust selector to your work item types dropdown
-  clearWorkItemTypesDropdown();
-
-  workItemTypes.forEach((type) => {
-    $dropdown.append(new Option(type.name, type.referenceName));
-  });
-
-  $dropdown.prop("disabled", false);
-}
-
 // Event listener for work item type selection
 $(document).on("change", "#work-item-type-select", function () {
   selectedWorkItemTypeName = $(this).find("option:selected").text();
+  // set icon from selected option data attribute (if present)
+  const iconUrl = $(this).find("option:selected").data('icon-url');
+  if (iconUrl) {
+    $('#global-selected-wit-icon').attr('src', iconUrl);
+    // update icons inside each deliverable template
+    $('.deliverable-wit-icon').attr('src', iconUrl);
+  } else {
+    $('#global-selected-wit-icon').attr('src', 'images/work-item.webp');
+    $('.deliverable-wit-icon').attr('src', 'images/work-item.webp');
+  }
 
   // Update the placeholder for each .deliverable-title in the first #deliverables-container
   $("#deliverables-container .deliverable-prefix").attr("placeholder", selectedWorkItemTypeName + " Title Prefix");
@@ -657,6 +617,20 @@ $(document).on("change", "#work-item-type-select", function () {
 
   // Update other fields
   $('#work-items-header').contents().first().replaceWith(selectedWorkItemTypeName + " ");
+});
+
+// When a new deliverable is cloned via the add-deliverable handler, ensure its icon matches current selection
+$(document).on('DOMNodeInserted', '#deliverables-container', function (e) {
+  try {
+    const $node = $(e.target);
+    // If a deliverable-item was added, set its icon
+    if ($node && $node.hasClass && $node.hasClass('deliverable-item')) {
+      const currentIcon = $('#global-selected-wit-icon').attr('src') || 'images/work-item.webp';
+      $node.find('.deliverable-wit-icon').attr('src', currentIcon);
+    }
+  } catch (err) {
+    // ignore
+  }
 });
 
 // Event listener for when the Team dropdown value changes
@@ -712,14 +686,14 @@ $(".logout-link").on("click", function (event) {
 });
 
 // Help / Guided Tour relaunch
-$(document).on('click', '#help-tour-btn', function(e) {
+$(document).on('click', '#help-tour-btn', function (e) {
   e.preventDefault();
   try {
     if (window.FirstRunGuide) {
       if (typeof window.FirstRunGuide.reset === 'function') window.FirstRunGuide.reset();
       if (typeof window.FirstRunGuide.maybeStart === 'function') window.FirstRunGuide.maybeStart({ delay: 0 });
     }
-  } catch(err) {
+  } catch (err) {
     console.warn('Failed to launch guided tour', err);
   }
 });
