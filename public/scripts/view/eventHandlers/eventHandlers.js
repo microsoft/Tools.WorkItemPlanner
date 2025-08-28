@@ -574,9 +574,12 @@ $(document).on("change", "#work-item-type-select", function () {
     $('#global-selected-wit-icon').attr('src', iconUrl);
     // update icons inside each deliverable template
     $('.deliverable-wit-icon').attr('src', iconUrl);
+  // Persist current selected icon URL globally for future cloned deliverables
+  window.selectedWitIconUrl = iconUrl;
   } else {
     $('#global-selected-wit-icon').attr('src', 'images/work-item.webp');
     $('.deliverable-wit-icon').attr('src', 'images/work-item.webp');
+  window.selectedWitIconUrl = 'images/work-item.webp';
   }
 
   // Update the placeholder for each .deliverable-title in the first #deliverables-container
@@ -597,8 +600,8 @@ $(document).on('DOMNodeInserted', '#deliverables-container', function (e) {
     const $node = $(e.target);
     // If a deliverable-item was added, set its icon
     if ($node && $node.hasClass && $node.hasClass('deliverable-item')) {
-      const currentIcon = $('#global-selected-wit-icon').attr('src') || 'images/work-item.webp';
-      $node.find('.deliverable-wit-icon').attr('src', currentIcon);
+  const currentIcon = window.selectedWitIconUrl || $('.deliverable-wit-icon:first').attr('src') || 'images/work-item.webp';
+  $node.find('.deliverable-wit-icon').attr('src', currentIcon);
     }
   } catch (err) {
     // ignore

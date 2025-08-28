@@ -17,6 +17,8 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Variable to store the selected work item type details for dynamic updates
 let selectedWorkItemTypeName = "Work-Item";
+// Cache (referenceName -> icon URL or data URI). Persist for session to avoid duplicate network fetches.
+const workItemTypeIconCache = new Map();
 
 // Helper function to get the assigned-to select element
 function getAssignedToSelect() {
@@ -831,6 +833,10 @@ function resetDeliverableItems() {
   // Also reset global selected work item icon (defensive — clearWorkItemTypesDropdown also does this)
   if (typeof $ !== 'undefined') {
     $('#global-selected-wit-icon').attr('src', defaultWitIcon);
+  }
+  // Persist global variable for icon used during cloning
+  if (typeof window !== 'undefined') {
+    window.selectedWitIconUrl = defaultWitIcon;
   }
 
   const prefixValue = "";
@@ -2395,6 +2401,10 @@ function clearWorkItemTypesDropdown() {
 
   workItemSelect.selectedIndex = 0;
   workItemSelect.disabled = true;
+  // Do not fully clear cache (allows cross-project reuse) but reset selected icon state
+  if (typeof window !== 'undefined') {
+    window.selectedWitIconUrl = 'images/work-item.webp';
+  }
 }
 
 // Function to populate a dropdown with the list of work item types
@@ -2409,7 +2419,14 @@ function populateWorkItemTypesDropdown(workItemTypes) {
     }
     const option = new Option(type.name, type.referenceName);
     if (type.icon && type.icon.url) {
-      $(option).attr('data-icon-url', type.icon.url);
+      // If cached, reuse cached URL (may be a data URI if we later enhance to inline it)
+      const cached = workItemTypeIconCache.get(type.referenceName);
+      if (!cached) {
+        workItemTypeIconCache.set(type.referenceName, type.icon.url);
+        $(option).attr('data-icon-url', type.icon.url);
+      } else {
+        $(option).attr('data-icon-url', cached);
+      }
     }
     $dropdown.append(option);
   });
